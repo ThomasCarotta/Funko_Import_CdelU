@@ -227,6 +227,15 @@ class LineaFactura(models.Model):
     idProducto = models.ForeignKey('Producto', on_delete=models.CASCADE)    
     idFactura = models.ForeignKey('Factura', on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        if self.idProducto.cantidadDisp < self.cantidad:
+            raise ValidationError(f"No hay suficiente stock disponible para el producto {self.idProducto.nombre}.")
+        
+        self.idProducto.cantidadDisp -= self.cantidad
+        self.idProducto.save()
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'LineaFactura {self.idLineaFactura} - {self.cantidad}'
 
@@ -254,3 +263,5 @@ class CodigoSeguimiento(models.Model): #?CRUD despues vemos
 
     def __str__(self):
         return f'Codigo Seguimiento {self.codigo} - {self.idFactura}'
+
+
