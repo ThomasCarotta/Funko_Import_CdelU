@@ -144,6 +144,24 @@ class Promocion(models.Model): #!CRUD
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField() 
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+    
+    def clean(self):
+        # Busca las promociones activas para el mismo producto
+        promociones_activas = Promocion.objects.filter(
+            idProducto=self.idProducto,
+            fechaFin__gte=self.fechaInicio,  # Las promociones que terminan después de que esta inicia
+            fechaInicio__lte=self.fechaFin,  # Las promociones que inician antes de que esta termina
+        ).exclude(id=self.id)  # Excluir la promoción actual (en caso de actualización)
+
+        if promociones_activas.count() >= 2:
+            raise ValidationError(
+                f"No se pueden asociar más de dos promociones activas al producto {self.idProducto.nombre} al mismo tiempo."
+            )
+
+    def save(self, *args, **kwargs):
+        # Asegúrate de llamar a clean() antes de guardar
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Promocion {self.id_promocion} - {self.porcentaje}%'
@@ -180,6 +198,27 @@ class ResenaComentario(models.Model): #!CRUD
     comentario = models.CharField(max_length=500)
     idUsuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
     idProducto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+
+    def clean(self):
+        if not Factura.objects.filter(
+            lineas_factura__id_producto=self.id_producto,
+            idUsuario=self.idUsuario
+        ).exists():
+            raise ValidationError(
+                {'id_producto': 'No puedes reseñar un producto que no compraste.'}
+            )
+
+        if ResenaComentario.objects.filter(
+            idProducto=self.idProducto,
+            idUsuario=self.idUsuario
+        ).exclude(idResenaComentario=self.idResenaComentario).exists():
+            raise ValidationError(
+                {'id_producto': 'Ya has hecho una reseña para este producto.'}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Reseña {self.idResenaComentario} - {self.resena}'
@@ -220,6 +259,15 @@ class Factura(models.Model):
     fecha_venta = models.DateField()
     id_Usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
 
+    def calcular_total(self):
+        lineas_factura = LineaFactura.objects.filter(id_factura=self)
+        total = sum(linea.cantidad * linea.idProducto.precio for linea in lineas_factura)
+        return total
+
+    def save(self, *args, **kwargs):
+        self.pago_total = self.calcular_total()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'Factura {self.id_factura} - {self.fecha_venta}'
 
@@ -227,7 +275,7 @@ class LineaFactura(models.Model):
     idLineaFactura = models.AutoField(primary_key=True)
     cantidad = models.IntegerField(validators=[MinValueValidator(1)])
     idProducto = models.ForeignKey('Producto', on_delete=models.CASCADE)    
-    idFactura = models.ForeignKey('Factura', on_delete=models.CASCADE)
+    id_factura = models.ForeignKey('Factura', on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if self.idProducto.cantidadDisp < self.cantidad:
@@ -244,26 +292,40 @@ class LineaFactura(models.Model):
 class FacturaDescuento(models.Model):
     idFacturaDescuento = models.AutoField(primary_key=True)
     idDescuento = models.ForeignKey('Descuento', on_delete=models.CASCADE)
-    idFactura = models.ForeignKey('Factura', on_delete=models.CASCADE)
+    id_factura = models.ForeignKey('Factura', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'FacturaDescuento {self.idFacturaDescuento} - {self.idDescuento} - {self.idFactura}'
+        return f'FacturaDescuento {self.idFacturaDescuento} - {self.idDescuento} - {self.id_factura}'
 
-#verificar que no esta el producto 2 veces para el mismo carrito
 class ProductoCarrito(models.Model):
     id_producto_carrito = models.AutoField(primary_key=True)
     cantidad = models.IntegerField(validators=[MinValueValidator(1)])
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
     id_carrito = models.ForeignKey('Carrito', on_delete=models.CASCADE)
 
+    def clean(self):
+        if ProductoCarrito.objects.filter(
+            id_producto=self.id_producto,
+            id_carrito=self.id_carrito
+        ).exclude(id_producto_carrito=self.id_producto_carrito).exists():
+            raise ValidationError(
+                {'id_producto': 'El producto ya está en ese carrito.'}
+            )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
     def __str__(self):
         return f'Producto Carrito {self.id_producto_carrito} - {self.cantidad} x {self.precio}'
 
 class CodigoSeguimiento(models.Model): #?CRUD despues vemos
     codigo = models.CharField(max_length=50, unique=True)
-    idFactura = models.ForeignKey('Factura', on_delete=models.CASCADE)
+    id_factura = models.ForeignKey('Factura', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Codigo Seguimiento {self.codigo} - {self.idFactura}'
+        return f'Codigo Seguimiento {self.codigo} - {self.id_factura}'
 
 
