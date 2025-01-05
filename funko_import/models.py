@@ -274,12 +274,26 @@ class FacturaDescuento(models.Model):
     def __str__(self):
         return f'FacturaDescuento {self.idFacturaDescuento} - {self.idDescuento} - {self.id_factura}'
 
-#verificar que no esta el producto 2 veces para el mismo carrito
 class ProductoCarrito(models.Model):
     id_producto_carrito = models.AutoField(primary_key=True)
     cantidad = models.IntegerField(validators=[MinValueValidator(1)])
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
     id_carrito = models.ForeignKey('Carrito', on_delete=models.CASCADE)
+
+    def clean(self):
+        if ProductoCarrito.objects.filter(
+            id_producto=self.id_producto,
+            id_carrito=self.id_carrito
+        ).exclude(id_producto_carrito=self.id_producto_carrito).exists():
+            raise ValidationError(
+                {'id_producto': 'El producto ya está en ese carrito.'}
+            )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f'Producto Carrito {self.id_producto_carrito} - {self.cantidad} x {self.precio}'
