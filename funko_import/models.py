@@ -197,6 +197,27 @@ class ResenaComentario(models.Model): #!CRUD
     idUsuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
     idProducto = models.ForeignKey('Producto', on_delete=models.CASCADE)
 
+    def clean(self):
+        if not Factura.objects.filter(
+            lineas_factura__id_producto=self.id_producto,
+            idUsuario=self.idUsuario
+        ).exists():
+            raise ValidationError(
+                {'id_producto': 'No puedes reseñar un producto que no compraste.'}
+            )
+
+        if ResenaComentario.objects.filter(
+            idProducto=self.idProducto,
+            idUsuario=self.idUsuario
+        ).exclude(idResenaComentario=self.idResenaComentario).exists():
+            raise ValidationError(
+                {'id_producto': 'Ya has hecho una reseña para este producto.'}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'Reseña {self.idResenaComentario} - {self.resena}'
 
