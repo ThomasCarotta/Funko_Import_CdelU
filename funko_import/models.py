@@ -3,9 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-
-#hola
-
 import string
 import random
 
@@ -122,6 +119,7 @@ class Producto(models.Model): #!CRUD
     cantidadDisp = models.IntegerField(validators=[MinValueValidator(0)])  
     URLImagen = models.CharField(max_length=2083)
     idColeccion = models.ForeignKey(Coleccion, on_delete=models.CASCADE)
+    precio_original = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], null=True, blank=True)
 
     def clean(self):
         if Producto.objects.filter(idColeccion=self.idColeccion, numero=self.numero).exclude(idProducto=self.idProducto).exists():
@@ -138,25 +136,39 @@ class Producto(models.Model): #!CRUD
 
 #que se aplique la promocion al precio del producto y cuando termine la promocion vuelva al precio original
 #Que no haya mas de 2 promociones activas al mismo producto al mismo tiempo
-class Promocion(models.Model): #!CRUD
+class Promocion(models.Model):
     id_promocion = models.AutoField(primary_key=True)
-    porcentaje = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(1)]) #! agregar en forms
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(1)])
     fecha_inicio = models.DateField()
-    fecha_fin = models.DateField() 
+    fecha_fin = models.DateField()
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
-    
-    def clean(self):
-        # Busca las promociones activas para el mismo producto
-        promociones_activas = Promocion.objects.filter(
-            idProducto=self.idProducto,
-            fechaFin__gte=self.fechaInicio,  # Las promociones que terminan después de que esta inicia
-            fechaInicio__lte=self.fechaFin,  # Las promociones que inician antes de que esta termina
-        ).exclude(id=self.id)  # Excluir la promoción actual (en caso de actualización)
 
+    def aplicar_promocion(self):
+        producto = self.id_producto
+        if producto.precio_original is None:
+            producto.precio_original = producto.precio  # Guardar el precio original antes de aplicar la promoción
+            producto.save()
+
+        descuento = producto.precio * self.porcentaje
+        producto.precio -= descuento  # Reducir el precio según el porcentaje de descuento
+        producto.save()
+
+    def quitar_descuento(self):
+        producto = self.id_producto
+        if producto.precio_original is not None:
+            producto.precio = producto.precio_original  # Restaurar el precio original
+            producto.precio_original = None  # Borrar el precio original
+            producto.save()
+
+    def clean(self):
+        # Validación para no permitir más de dos promociones activas al mismo producto
+        promociones_activas = Promocion.objects.filter(
+            id_producto=self.id_producto,
+            fecha_fin__gte=self.fecha_inicio,
+            fecha_inicio__lte=self.fecha_fin,
+        ).exclude(id=self.id)
         if promociones_activas.count() >= 2:
-            raise ValidationError(
-                f"No se pueden asociar más de dos promociones activas al producto {self.idProducto.nombre} al mismo tiempo."
-            )
+            raise ValidationError("No puede haber más de dos promociones activas al mismo tiempo para el mismo producto.")
 
     def save(self, *args, **kwargs):
         # Asegúrate de llamar a clean() antes de guardar
