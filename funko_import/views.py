@@ -11,7 +11,8 @@ import mercadopago
 from django.views.decorators.csrf import csrf_exempt
 import json
 from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
-
+from rest_framework.response import Response
+from rest_framework import status
 from django.db.models import Sum, Count
 from django.conf import settings
 
@@ -69,6 +70,10 @@ class facturaView(viewsets.ModelViewSet):
 class lineaFacturaView(viewsets.ModelViewSet):
     serializer_class = LineaFacturaSerializer
     queryset = LineaFactura.objects.all()
+
+class IngresoStockView(viewsets.ModelViewSet):
+    serializer_class = IngresoStockSerializer
+    queryset = IngresoStock.objects.all()
 
 #GET ALL
 
@@ -229,7 +234,7 @@ from google.auth.transport import requests as google_requests
 from .models import Usuario
 
 
-GOOGLE_CLIENT_ID = "CLIENT_ID"
+GOOGLE_CLIENT_ID = "668894091180-c9dah2k5g4j3nbi4pneic550md1a2iok.apps.googleusercontent.com"
 @csrf_exempt
 def google_login(request):
     if request.method != "POST":

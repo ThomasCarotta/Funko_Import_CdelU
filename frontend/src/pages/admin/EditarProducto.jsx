@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function EditarProducto({ producto, closeModal, onSave }) {
+function EditarProducto({ producto, closeModal, onSave, ediciones }) {
   const [editedProduct, setEditedProduct] = useState({ ...producto });
 
   const handleSave = () => {
@@ -51,41 +51,34 @@ function EditarProducto({ producto, closeModal, onSave }) {
 
           <label className="block">
             <span className="text-gray-700">Edición:</span>
-            <input
-              type="text"
+            <select
               className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md"
-              value={editedProduct.edicion}
+              value={editedProduct.idEdicion}
               onChange={(e) =>
-                setEditedProduct({ ...editedProduct, edicion: e.target.value })
+                setEditedProduct({ ...editedProduct, idEdicion: e.target.value })
               }
-            />
+            >
+              {ediciones.map((edicion) => (
+                <option key={edicion.id_edicion} value={edicion.id_edicion}>
+                  {edicion.nombre}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="block">
             <span className="text-gray-700">Colección:</span>
             <select
               className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md"
-              value={editedProduct.coleccion}
+              value={editedProduct.idColeccion}
               onChange={(e) =>
-                setEditedProduct({ ...editedProduct, coleccion: e.target.value })
+                setEditedProduct({ ...editedProduct, idColeccion: e.target.value })
               }
             >
               <option value="Marvel">Marvel</option>
               <option value="DC">DC</option>
               <option value="Star Wars">Star Wars</option>
             </select>
-          </label>
-
-          <label className="block">
-            <span className="text-gray-700">Stock:</span>
-            <input
-              type="number"
-              className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md"
-              value={editedProduct.stock}
-              onChange={(e) =>
-                setEditedProduct({ ...editedProduct, stock: e.target.value })
-              }
-            />
           </label>
 
           <label className="block col-span-2">

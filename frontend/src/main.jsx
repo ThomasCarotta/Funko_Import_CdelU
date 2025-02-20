@@ -4,7 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'; // Importar GoogleOAu
 import App from './App'; // AsegÃºrate de la ruta correcta
 import './index.css';
 
-const clientId = "CLIENT_ID"; // Sustituye por tu Client ID
+const clientId = "668894091180-c9dah2k5g4j3nbi4pneic550md1a2iok.apps.googleusercontent.com"; // Sustituye por tu Client ID
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

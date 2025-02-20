@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AgregarProducto from './AgregarProducto';
 import EditarProducto from './EditarProducto';
+import AgregarStock from './AgregarStock'; // Importa el nuevo componente
 
 function Productos() {
   const [search, setSearch] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddingStock, setIsAddingStock] = useState(false); // Estado para el modal de agregar stock
   const [productos, setProductos] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [colecciones, setColecciones] = useState([]);
@@ -51,9 +53,12 @@ function Productos() {
     setIsEditing(true);
   };
 
+  const handleAddStockClick = () => setIsAddingStock(true); // Manejar el clic en el botón de agregar stock
+
   const closeModal = () => {
     setIsAdding(false);
     setIsEditing(false);
+    setIsAddingStock(false); // Cerrar el modal de agregar stock
     setSelectedProduct(null);
   };
 
@@ -98,6 +103,10 @@ function Productos() {
     }
   };
 
+  const handleAddStock = async () => {
+    await fetchProductos(); // Refrescar la lista de productos después de agregar stock
+  };
+
   const productosFiltrados = productos.filter(producto =>
     producto.nombre.toLowerCase().includes(search.toLowerCase())
   );
@@ -116,6 +125,9 @@ function Productos() {
         />
         <button className="btn-add-product" onClick={handleAddProductClick}>
           Agregar Producto
+        </button>
+        <button className="btn-add-stock" onClick={handleAddStockClick}>
+          Agregar Stock
         </button>
       </div>
 
@@ -180,6 +192,14 @@ function Productos() {
           onSave={saveEditedProduct}
           colecciones={colecciones}
           ediciones={ediciones}
+        />
+      )}
+
+      {isAddingStock && (
+        <AgregarStock
+          closeModal={closeModal}
+          productos={productos}
+          onAddStock={handleAddStock}
         />
       )}
     </div>

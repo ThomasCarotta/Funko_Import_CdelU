@@ -17,6 +17,7 @@ router.register(r'preguntas', views.preguntaView, basename='pregunta')
 router.register(r'ediciones', views.EdicionView, basename='edicion')
 router.register(r'facturas', views.facturaView, basename='factura')
 router.register(r'lineafacturas', views.lineaFacturaView, basename='lineafactura')
+router.register(r'ingresostock', views.IngresoStockView, basename='ingresostock')
 
 urlpatterns = [
     path('', include(router.urls)),  # Rutas del router bajo el prefijo 'api/auth/'

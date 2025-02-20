@@ -117,3 +117,4 @@ class LineaFacturaSerializer(serializers.ModelSerializer):
     class Meta:
         model = LineaFactura
         fields = '__all__'
+
