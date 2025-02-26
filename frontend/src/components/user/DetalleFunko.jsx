@@ -191,7 +191,24 @@ function DetalleFunko() {
       />
       <h2>{producto.nombre}</h2>
       <p>{producto.descripcion}</p>
-      <p>Precio: {producto.precio} USD</p>
+      <p>
+  Precio:{" "}
+  {producto.precio_con_descuento && producto.porcentaje_descuento ? (
+    <>
+      <span style={{ textDecoration: "line-through", color: "red" }}>
+        {producto.precio} USD
+      </span>{" "}
+      <strong>{producto.precio_con_descuento} USD</strong>
+    </>
+  ) : (
+    <strong>{producto.precio} USD</strong>
+  )}
+</p>
+{producto.porcentaje_descuento && (
+  <div className="descuento-banner">
+    ¡{producto.porcentaje_descuento}% de descuento!
+  </div>
+)}
       <p>Cantidad disponible: {producto.cantidadDisp}</p>
       <p>{producto.esEspecial ? "Edición especial" : "Edición estándar"}</p>
       <button onClick={handleAddToCart}>Añadir al carrito</button>

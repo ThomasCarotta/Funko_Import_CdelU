@@ -385,8 +385,37 @@ def admin_dashboard_data(request):
         'producto_mas_vendido': producto_mas_vendido['idProducto__nombre'] if producto_mas_vendido else 'N/A'
     })
 
+# def obtener_productos(request):
+#     #obtiene la lista de productos de la base de datos
+#     productos = Producto.objects.all().values(
+#         "idProducto", 
+#         "nombre", 
+#         "numero", 
+#         "idEdicion", 
+#         "esEspecial", 
+#         "descripcion", 
+#         "brilla", 
+#         "precio", 
+#         "cantidadDisp", 
+#         "imagen", 
+#         "idColeccion", 
+#         "precio_original"
+#     )
+    
+#     productos_list = []
+#     for producto in productos:
+#         if producto["imagen"]:
+#             producto["imagen"] = request.build_absolute_uri(settings.MEDIA_URL + producto["imagen"])
+#         productos_list.append(producto)
+
+#     return JsonResponse(productos_list, safe=False)
+
+
+from datetime import date
+
+fecha_actual = date.today()  # Esto también funciona
+
 def obtener_productos(request):
-    #obtiene la lista de productos de la base de datos
     productos = Producto.objects.all().values(
         "idProducto", 
         "nombre", 
@@ -404,8 +433,31 @@ def obtener_productos(request):
     
     productos_list = []
     for producto in productos:
+        # Obtener la instancia de Producto
+        try:
+            producto_obj = Producto.objects.get(idProducto=producto["idProducto"])
+        except Producto.DoesNotExist:
+            continue  # Saltar si el producto no existe (prevención de errores)
+
+        # Buscar promoción activa
+        promocion_activa = Promocion.objects.filter(
+            id_producto=producto_obj, 
+            fecha_inicio__lte=date.today(), 
+            fecha_fin__gte=date.today()
+        ).order_by('-fecha_inicio').first()
+
+        if promocion_activa:
+            descuento = float(producto["precio"]) * float(promocion_activa.porcentaje)
+            producto["precio_con_descuento"] = round(float(producto["precio"]) - descuento, 2)
+            producto["porcentaje_descuento"] = int(promocion_activa.porcentaje * 100)
+        else:
+            producto["precio_con_descuento"] = None
+            producto["porcentaje_descuento"] = None
+
+        # Ajustar imagen si está presente
         if producto["imagen"]:
             producto["imagen"] = request.build_absolute_uri(settings.MEDIA_URL + producto["imagen"])
+        
         productos_list.append(producto)
 
     return JsonResponse(productos_list, safe=False)
@@ -413,18 +465,36 @@ def obtener_productos(request):
 @api_view(['GET'])
 def obtener_detalle_producto(request, idProducto):
     try:
-        # Usamos get_object_or_404 para obtener el producto por su idProducto
+        # Obtener el producto por su idProducto
         producto = get_object_or_404(Producto, idProducto=idProducto)
         
-        # Si el producto tiene imagen, lo mostramos como URL completa
+        # Buscar promoción activa
+        promocion_activa = Promocion.objects.filter(
+            id_producto=producto, 
+            fecha_inicio__lte=date.today(), 
+            fecha_fin__gte=date.today()
+        ).order_by('-fecha_inicio').first()
+
+        # Calcular precio con descuento si hay una promoción activa
+        if promocion_activa:
+            descuento = float(producto.precio) * float(promocion_activa.porcentaje)
+            precio_con_descuento = round(float(producto.precio) - descuento, 2)
+            porcentaje_descuento = int(promocion_activa.porcentaje * 100)
+        else:
+            precio_con_descuento = None
+            porcentaje_descuento = None
+
+        # Construir la URL de la imagen si está presente
         imagen_url = producto.imagen.url if producto.imagen else None
-        
-        # Enviar los datos del producto como una respuesta JSON
+
+        # Devolver los datos del producto como una respuesta JSON
         return JsonResponse({
             "idProducto": producto.idProducto,
             "nombre": producto.nombre,
             "descripcion": producto.descripcion,
             "precio": str(producto.precio),  # Convertimos el precio a string para asegurar el formato correcto
+            "precio_con_descuento": str(precio_con_descuento) if precio_con_descuento else None,
+            "porcentaje_descuento": porcentaje_descuento,
             "imagen": imagen_url,
             "cantidadDisp": producto.cantidadDisp,
             "esEspecial": producto.esEspecial,
@@ -433,53 +503,6 @@ def obtener_detalle_producto(request, idProducto):
         # Si ocurre un error, lo devolvemos en formato JSON
         return JsonResponse({"error": str(e)}, status=500)
 
-# @csrf_exempt
-# def add_to_cart(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             correo = data.get("correo")
-#             id_producto = data.get("idProducto")
-#             cantidad = data.get("cantidad")
-
-#             if not id_producto or not cantidad or not correo:
-#                 return JsonResponse({"success": False, "message": "Datos incompletos"}, status=400)
-
-#             # Verificar si el usuario existe a partir del correo
-#             try:
-#                 usuario = Usuario.objects.get(correo=correo)
-#             except Usuario.DoesNotExist:
-#                 return JsonResponse({"success": False, "message": "Usuario no encontrado"}, status=404)
-
-#             # Verificar si el producto existe
-#             try:
-#                 producto = Producto.objects.get(idProducto=id_producto)
-#             except Producto.DoesNotExist:
-#                 return JsonResponse({"success": False, "message": "Producto no encontrado"}, status=404)
-
-#             # Obtener o crear el carrito del usuario
-#             carrito_usuario, created = carrito.objects.get_or_create(idUsuario=usuario)
-
-#             # Si no existe el carrito, se crea un carrito vacío
-#             if not created:
-#                 # Si el carrito existe, verifica si el producto está en el carrito
-#                 producto_carrito = ProductoCarrito.objects.filter(id_carrito=carrito_usuario, id_producto=producto).first()
-#                 if not producto_carrito:
-#                     ProductoCarrito.objects.create(id_carrito=carrito_usuario, id_producto=producto, cantidad=cantidad)
-#             else:
-#                 # Si el carrito fue creado, agregar el producto por primera vez
-#                 ProductoCarrito.objects.create(id_carrito=carrito_usuario, id_producto=producto, cantidad=cantidad)
-
-#             # Actualizar el total del carrito
-#             carrito_usuario.actualizar_total()
-
-#             return JsonResponse({"success": True, "message": "Producto añadido al carrito"})
-
-#         except Exception as e:
-#             print(f"Error al agregar al carrito: {str(e)}")  # Imprimir más detalles sobre el error
-#             return JsonResponse({"success": False, "message": "Hubo un problema al agregar al carrito", "error": str(e)}, status=500)
-
-#     return JsonResponse({"success": False, "message": "Método no permitido"}, status=405)
 @csrf_exempt
 def add_to_cart(request):
     if request.method == "POST":
@@ -504,19 +527,35 @@ def add_to_cart(request):
             except Producto.DoesNotExist:
                 return JsonResponse({"success": False, "message": "Producto no encontrado"}, status=404)
 
+            # Buscar promoción activa para el producto
+            promocion_activa = Promocion.objects.filter(
+                id_producto=producto, 
+                fecha_inicio__lte=date.today(), 
+                fecha_fin__gte=date.today()
+            ).order_by('-fecha_inicio').first()
+
+            # Calcular el precio con descuento si hay una promoción activa
+            precio_final = float(producto.precio)
+            if promocion_activa:
+                descuento = float(producto.precio) * float(promocion_activa.porcentaje)
+                precio_final = round(float(producto.precio) - descuento, 2)
+
             # Obtener o crear el carrito del usuario
             carrito_usuario, created = carrito.objects.get_or_create(idUsuario=usuario)
-            print(f"✅ Carrito {'creado' if created else 'obtenido'} para el usuario {usuario.correo}")
 
             # Verificar si el producto ya está en el carrito
-            producto_carrito = ProductoCarrito.objects.filter(id_carrito=carrito_usuario, id_producto=producto).first()
-            if producto_carrito:
+            producto_carrito, created = ProductoCarrito.objects.get_or_create(
+                id_carrito=carrito_usuario, 
+                id_producto=producto,
+                defaults={"cantidad": cantidad, "precioUnitario": precio_final}
+            )
+
+            if not created:
+                # Si el producto ya está en el carrito, actualizar cantidad y precio solo si hay una nueva promoción
+                if promocion_activa and producto_carrito.precioUnitario != precio_final:
+                    producto_carrito.precioUnitario = precio_final  # Actualizar precio con promoción activa
                 producto_carrito.cantidad += cantidad
                 producto_carrito.save()
-                print(f"✅ Cantidad actualizada para el producto {producto.nombre} en el carrito")
-            else:
-                ProductoCarrito.objects.create(id_carrito=carrito_usuario, id_producto=producto, cantidad=cantidad)
-                print(f"✅ Producto {producto.nombre} añadido al carrito")
 
             # Actualizar el total del carrito
             carrito_usuario.actualizar_total()
@@ -664,8 +703,6 @@ def aplicar_descuento(request):
         except Exception as e:
             return JsonResponse({"success": False, "message": str(e)}, status=500)
 
-
-###########################################################################################################
 
 @api_view(['DELETE'])
 def eliminar_producto_carrito(request):

@@ -102,7 +102,10 @@ const Cart = () => {
   }, [cart, userEmail, navigate]);
 
   const calcularTotal = (cart) => {
-    const totalAmount = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+    const totalAmount = cart.reduce((acc, item) => {
+      const precioFinal = item.precio_con_descuento || item.precio;
+      return acc + precioFinal * item.quantity;
+    }, 0);
     setTotal(totalAmount.toFixed(2));
   };
 
@@ -149,37 +152,37 @@ const Cart = () => {
   };
 
   const applyDiscount = async () => {
-    if (!discountCode) {
-      alert("Por favor, ingresa un código de descuento.");
-      return;
+  if (!discountCode) {
+    alert("Por favor, ingresa un código de descuento.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:8000/api/auth/aplicar-descuento/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        codigoDescuento: discountCode,
+        userEmail: userEmail,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Error al aplicar descuento");
     }
 
-    try {
-      const response = await fetch("http://localhost:8000/api/auth/aplicar-descuento/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          codigoDescuento: discountCode,
-          userEmail: userEmail,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Error al aplicar descuento");
-      }
-
-      setDiscountApplied(true);
-      setDiscountAmount(parseFloat(data.descuento));
-      setTotal(parseFloat(data.newTotal));
-      alert("Descuento aplicado correctamente");
-    } catch (error) {
-      console.error("Error al aplicar descuento:", error.message);
-      alert("Error al aplicar descuento: " + error.message);
-    }
-  };
+    setDiscountApplied(true);
+    setDiscountAmount(parseFloat(data.descuento));
+    setTotal(parseFloat(data.newTotal));
+    alert("Descuento aplicado correctamente");
+  } catch (error) {
+    console.error("Error al aplicar descuento:", error.message);
+    alert("Error al aplicar descuento: " + error.message);
+  }
+};
 
   const handleCheckout = async () => {
     try {
@@ -257,30 +260,45 @@ const Cart = () => {
             </div>
 
             {cart.map((item) => (
-              <div key={item.idProducto} className="cart-item">
-                <div className="cart-product">
-                  <img
-                    src={`http://localhost:8000${item.imagen}`}
-                    alt={item.nombre}
-                    className="cart-item-img"
-                    onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
-                  />
-                  <span>{item.nombre}</span>
-                </div>
-                <div>${item.precio}</div>
-                <div className="cart-quantity">
-                  <button onClick={() => updateQuantity(item.idProducto, item.quantity - 1)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.idProducto, item.quantity + 1)}>+</button>
-                </div>
-                <div>${(item.precio * item.quantity).toFixed(2)}</div>
-                <div>
-                  <button className="remove-btn" onClick={() => removeProduct(item.idProducto)}>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
+  <div key={item.idProducto} className="cart-item">
+    <div className="cart-product">
+      <img
+        src={`http://localhost:8000${item.imagen}`}
+        alt={item.nombre}
+        className="cart-item-img"
+        onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
+      />
+      <span>{item.nombre}</span>
+    </div>
+    <div>
+      {item.precio_con_descuento ? (
+        <>
+          <span style={{ textDecoration: "line-through", color: "red" }}>
+            ${item.precio_original}
+          </span>{" "}
+          <strong>${item.precio_con_descuento}</strong>
+        </>
+      ) : (
+        <strong>${item.precio}</strong>
+      )}
+    </div>
+    <div className="cart-quantity">
+      <button onClick={() => updateQuantity(item.idProducto, item.quantity - 1)}>-</button>
+      <span>{item.quantity}</span>
+      <button onClick={() => updateQuantity(item.idProducto, item.quantity + 1)}>+</button>
+    </div>
+    <div>
+      ${item.precio_con_descuento
+        ? (item.precio_con_descuento * item.quantity).toFixed(2)
+        : (item.precio * item.quantity).toFixed(2)}
+    </div>
+    <div>
+      <button className="remove-btn" onClick={() => removeProduct(item.idProducto)}>
+        Eliminar
+      </button>
+    </div>
+  </div>
+))}
 
             <div className="cart-summary">
               <div className="summary-row">

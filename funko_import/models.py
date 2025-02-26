@@ -71,9 +71,11 @@ class carrito(models.Model): #!CRUD
 
     def calcular_total(self):
         productos_carrito = ProductoCarrito.objects.filter(id_carrito=self)
-        total = 0
-        for producto_carrito in productos_carrito:
-            total += producto_carrito.cantidad * producto_carrito.id_producto.precio
+        # total = 0
+        # for producto_carrito in productos_carrito:
+        #     total += producto_carrito.cantidad * producto_carrito.id_producto.precio
+        # return total
+        total = sum(producto_carrito.cantidad * producto_carrito.precioUnitario for producto_carrito in productos_carrito)
         return total
     
     def aplicar_descuento(self, porcentaje):
@@ -138,9 +140,9 @@ class Producto(models.Model): #!CRUD
     idProducto = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     numero = models.IntegerField(validators=[MinValueValidator(1)])
-    esEspecial = models.BooleanField(default=False)
+    esEspecial = models.BooleanField() #elimino (default=False)
     descripcion = models.CharField(max_length=255)
-    brilla = models.BooleanField(default=False)
+    brilla = models.BooleanField() #elimino (default=False)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))]) #! agregar en forms
     cantidadDisp = models.IntegerField(validators=[MinValueValidator(0)])  
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)     

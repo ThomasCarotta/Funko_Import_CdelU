@@ -41,21 +41,35 @@ function FunkoCard({ producto }) {
         {isFavorite ? "❤️" : "🤍"}
       </button>
 
+      {producto.porcentaje_descuento && (
+        <div className="descuento-banner">
+          {producto.porcentaje_descuento}% OFF
+        </div>
+      )}
+
       <img 
         src={imageUrl} 
         alt={producto.nombre} 
         className="funko-image" 
-        onError={(e) => {
-          e.target.src = "https://via.placeholder.com/150";
-        }}
+        onError={(e) => { e.target.src = "https://via.placeholder.com/150"; }}
       />
       <h3>{producto.nombre}</h3>
-      <p>{producto.precio} USD</p>
+      <p>
+        {producto.precio_con_descuento ? (
+          <>
+            <span style={{ textDecoration: "line-through", color: "red" }}>
+              {producto.precio} USD
+            </span>{" "}
+            <strong>{producto.precio_con_descuento} USD</strong>
+          </>
+        ) : (
+          <strong>{producto.precio} USD</strong>
+        )}
+      </p>
 
       <button className="ver-mas-btn" onClick={() => navigate(`/user/funko/${producto.idProducto}`)}>
         Ver más
       </button>
-    
     </div>
   );
 }
