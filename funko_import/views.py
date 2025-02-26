@@ -498,6 +498,10 @@ def add_to_cart(request):
             except Producto.DoesNotExist:
                 return JsonResponse({"success": False, "message": "Producto no encontrado"}, status=404)
 
+            # Verificar si hay suficiente stock
+            if producto.cantidadDisp < cantidad:
+                return JsonResponse({"success": False, "message": "No hay suficiente stock disponible para este producto."}, status=400)
+
             # Obtener o crear el carrito del usuario
             carrito_usuario, created = carrito.objects.get_or_create(idUsuario=usuario)
             print(f"✅ Carrito {'creado' if created else 'obtenido'} para el usuario {usuario.correo}")

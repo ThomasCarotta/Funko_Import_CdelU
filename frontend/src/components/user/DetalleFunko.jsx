@@ -89,6 +89,11 @@ function DetalleFunko() {
       return;
     }
 
+    if (producto.cantidadDisp <= 0) {
+      alert("No hay suficiente stock disponible para este producto.");
+      return;
+    }
+
     try {
       const respuesta = await fetch("http://localhost:8000/api/auth/add-to-cart/", {
         method: "POST",

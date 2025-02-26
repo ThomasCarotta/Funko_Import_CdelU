@@ -14,6 +14,8 @@ const HeaderAdmin = () => {
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_email");
+    localStorage.removeItem("user_token");
+    localStorage.removeItem("userEmail");
     navigate("/login");
   };
 

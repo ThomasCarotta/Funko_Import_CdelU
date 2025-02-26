@@ -50,6 +50,7 @@ const MisCompras = () => {
               <h2>Venta ID: {venta.id}</h2>
               <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
               <p>Total: ${venta.total}</p>
+              <p>Código de seguimiento: <strong>ENV123456789</strong></p> 
               <h3>Productos:</h3>
               <ul className="producto-list">
                 {venta.productos.map((producto) => (
