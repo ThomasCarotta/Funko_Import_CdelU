@@ -356,10 +356,10 @@ class ProductoCarrito(models.Model):
 
 class CodigoSeguimiento(models.Model): #?CRUD despues vemos
     codigo = models.CharField(max_length=50, unique=True)
-    id_factura = models.ForeignKey('Factura', on_delete=models.CASCADE)
+    id1 = models.OneToOneField('Venta', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Codigo Seguimiento {self.codigo} - {self.id_factura}'
+        return f'Codigo Seguimiento {self.codigo} - {self.id1}'
 
 class Venta(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ventas')

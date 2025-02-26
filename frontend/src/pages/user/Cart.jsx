@@ -191,68 +191,68 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     try {
-      if (cart.length === 0) {
-        alert("Tu carrito está vacío");
-        return;
-      }
-  
-      // Validar datos antes de enviar
-      if (!total || !userEmail) {
-        alert("Faltan datos requeridos para procesar el pago");
-        return;
-      }
-  
-      // Calcular el subtotal sin el envío
-      const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
-  
-      // Calcular el descuento aplicado
-      const descuentoAplicado = subtotal * (discountAmount / 100);
-  
-      // Calcular el total con envío y descuento
-      const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
-  
-      const requestBody = {
-        total: totalConDescuentoYEnvio,  // Aquí estás enviando el total final (con envío y descuento)
-        items: cart.map(item => ({
-          idProducto: item.idProducto,
-          title: item.nombre,
-          quantity: item.quantity,
-          unit_price: item.precio,
-        })),
-        payer: {
-          email: userEmail,
-        },
-      };
-  
-      console.log("Datos enviados al backend:", requestBody); // Depuración
-  
-      const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al crear preferencia de pago");
-      }
-  
-      const data = await response.json();
-      if (data.preferenceId) {
-        // Guardar el carrito en localStorage antes de redirigir
-        localStorage.setItem('cart', JSON.stringify(cart));
-        // Redirigir a Mercado Pago
-        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
-      } else {
-        throw new Error("No se recibió un ID de preferencia válido");
-      }
+        if (cart.length === 0) {
+            alert("Tu carrito está vacío");
+            return;
+        }
+
+        // Validar datos antes de enviar
+        if (!total || !userEmail) {
+            alert("Faltan datos requeridos para procesar el pago");
+            return;
+        }
+
+        // Calcular el subtotal sin el envío
+        const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+
+        // Calcular el descuento aplicado
+        const descuentoAplicado = subtotal * (discountAmount / 100);
+
+        // Calcular el total con envío y descuento
+        const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
+
+        const requestBody = {
+            total: totalConDescuentoYEnvio.toFixed(2),
+            items: cart.map(item => ({
+                idProducto: item.idProducto,
+                title: item.nombre,
+                quantity: item.quantity,
+                unit_price: item.precio,
+            })),
+            payer: {
+                email: userEmail,
+            },
+        };
+
+        console.log("Datos enviados al backend:", requestBody); // Depuración
+
+        const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Error al crear preferencia de pago");
+        }
+
+        const data = await response.json();
+        if (data.preferenceId) {
+            // Guardar el carrito en localStorage antes de redirigir
+            localStorage.setItem('cart', JSON.stringify(cart));
+            // Redirigir a Mercado Pago
+            window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
+        } else {
+            throw new Error("No se recibió un ID de preferencia válido");
+        }
     } catch (error) {
-      console.error("Error al procesar el pago:", error.message);
-      alert("Error al procesar el pago: " + error.message);
+        console.error("Error al procesar el pago:", error.message);
+        alert("Error al procesar el pago: " + error.message);
     }
-  };
+};
 
   if (loading) return <p>Cargando carrito...</p>;
 

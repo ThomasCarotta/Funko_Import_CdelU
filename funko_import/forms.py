@@ -1,5 +1,5 @@
 from django import forms
-from .models import Usuario, Coleccion, Descuento, Producto, Promocion, IngresoStock, PeticionProducto, ResenaComentario, Pregunta, Factura, LineaFactura,carrito 
+from .models import Usuario, Coleccion, Descuento, Producto, Promocion, IngresoStock, PeticionProducto, ResenaComentario, Pregunta, Factura, LineaFactura,carrito,Venta 
 from django.core.exceptions import ValidationError
 from datetime import datetime
 
@@ -157,4 +157,8 @@ class LineaFacturaForm(forms.ModelForm):
         model = LineaFactura
         fields = '__all__'  # O especificar campos como ['factura', 'producto', 'cantidad', 'precio']
 
+    class ventaForm(forms.ModelForm):
+        class Meta:
+            model = Venta
+            fields = '__all__'
         

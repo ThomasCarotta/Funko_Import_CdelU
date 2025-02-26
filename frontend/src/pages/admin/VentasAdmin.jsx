@@ -33,6 +33,24 @@ const VentasAdmin = () => {
     fetchVentas();
   }, [navigate]);
 
+  const handleStatusChange = async (ventaId, newStatus) => {
+    try {
+      // Actualiza el estado en el backend
+      await axios.patch(`http://127.0.0.1:8000/api/auth/update-venta/${ventaId}/`, {
+        estado: newStatus,
+      });
+
+      // Actualiza el estado de la venta en el frontend
+      setVentas((prevVentas) =>
+        prevVentas.map((venta) =>
+          venta.id === ventaId ? { ...venta, estado: newStatus } : venta
+        )
+      );
+    } catch (err) {
+      console.error("Error al actualizar el estado de la venta:", err);
+    }
+  };
+
   if (loading) return <div className="ventas-container">Cargando...</div>;
   if (error) return <div className="ventas-container error">{error}</div>;
 
@@ -49,6 +67,7 @@ const VentasAdmin = () => {
               <th>Fecha</th>
               <th>Total</th>
               <th>Productos</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -66,6 +85,15 @@ const VentasAdmin = () => {
                       </li>
                     ))}
                   </ul>
+                </td>
+                <td>
+                  <select
+                    value={venta.estado || "en_espera"}
+                    onChange={(e) => handleStatusChange(venta.id, e.target.value)}
+                  >
+                    <option value="en_espera">En espera</option>
+                    <option value="despachado">Despachado</option>
+                  </select>
                 </td>
               </tr>
             ))}
