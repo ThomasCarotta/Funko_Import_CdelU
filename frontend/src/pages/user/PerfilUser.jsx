@@ -20,14 +20,15 @@ const PerfilUser = () => {
   // Obtener el token de autenticación y los datos del usuario al cargar el componente
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const email = localStorage.getItem('email');
-
+    const email = localStorage.getItem('userEmail');
+  
+    console.log("Email desde localStorage:", email); // 🔍 Verifica qué email se está usando
+  
     if (!token || !email) {
-      navigate('/login'); // Redirigir al login si no hay token o correo
+      navigate('/login');
       return;
     }
-
-    // Obtener los datos del usuario desde el backend
+  
     fetch(`http://localhost:8000/api/auth/user-data/?email=${email}`, {
       method: 'GET',
       headers: {
@@ -37,6 +38,7 @@ const PerfilUser = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        console.log("Datos recibidos del backend:", data); // 🔍 Verificar qué usuario se recibe
         if (data.user) {
           setUserData(data.user);
         } else {
@@ -46,18 +48,11 @@ const PerfilUser = () => {
       .catch((error) => {
         console.error('Error al obtener los datos del usuario:', error);
       });
-  }, [navigate]);
+  }, [navigate, isPersonalInfoEditing, isShippingInfoEditing]);
 
   // Función para guardar los cambios en la información personal
   const handleSavePersonalInfo = () => {
     const token = localStorage.getItem('token');
-  
-    console.log('Datos enviados al backend:', JSON.stringify({
-      nombre: userData.nombre,
-      apellido: userData.apellido,
-      telefono: userData.telefono,
-      correo: localStorage.getItem('email'), // Asegurar que el correo se envía
-    }));
   
     fetch('http://localhost:8000/api/auth/update-profile/', {
       method: 'POST',
@@ -69,12 +64,11 @@ const PerfilUser = () => {
         nombre: userData.nombre,
         apellido: userData.apellido,
         telefono: userData.telefono,
-        correo: localStorage.getItem('email'), // Asegurar que el correo se envía
+        correo: userData.correo,  // Asegurar que se usa el correo del estado y no localStorage
       }),
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log('Respuesta del backend:', data);
         if (data.message === 'Perfil actualizado correctamente') {
           setIsPersonalInfoEditing(false);
           alert('Información personal actualizada correctamente.');
@@ -86,6 +80,7 @@ const PerfilUser = () => {
         console.error('Error al guardar los cambios:', error);
       });
   };
+  
   
 
   // Función para guardar los cambios en la información de envío
@@ -99,7 +94,7 @@ const PerfilUser = () => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        correo: localStorage.getItem('email'),
+        correo: localStorage.getItem('userEmail'),
         direccion: userData.direccion,
         // ciudad: userData.ciudad,
         // provincia: userData.provincia,

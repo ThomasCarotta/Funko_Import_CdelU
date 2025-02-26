@@ -102,12 +102,20 @@ const Cart = () => {
   }, [cart, userEmail, navigate]);
 
   const calcularTotal = (cart) => {
+<<<<<<< HEAD
     const totalAmount = cart.reduce((acc, item) => {
       const precioFinal = item.precio_con_descuento || item.precio;
       return acc + precioFinal * item.quantity;
     }, 0);
     setTotal(totalAmount.toFixed(2));
   };
+=======
+    const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+    const envio = 50; // Envío fijo de $50
+    const totalConEnvio = subtotal + envio;
+    setTotal(totalConEnvio.toFixed(2));
+};
+>>>>>>> e238de50693b6a9d652a108e1580a1fdee43be2f
 
   const removeProduct = async (idProducto) => {
     if (!userEmail) {
@@ -173,6 +181,7 @@ const Cart = () => {
     if (!response.ok) {
       throw new Error(data.message || "Error al aplicar descuento");
     }
+<<<<<<< HEAD
 
     setDiscountApplied(true);
     setDiscountAmount(parseFloat(data.descuento));
@@ -183,62 +192,106 @@ const Cart = () => {
     alert("Error al aplicar descuento: " + error.message);
   }
 };
+=======
+  
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/aplicar-descuento/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          codigoDescuento: discountCode,
+          userEmail: userEmail,
+        }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Error al aplicar descuento");
+      }
+  
+      setDiscountApplied(true);
+      setDiscountAmount(parseFloat(data.descuento));
+  
+      // Calcular el subtotal sin el envío
+      const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+      const descuentoAplicado = subtotal * (parseFloat(data.descuento) / 100);
+      const totalConDescuento = (subtotal - descuentoAplicado) + 50; // Aplicar descuento solo al subtotal y luego sumar el envío
+  
+      setTotal(totalConDescuento.toFixed(2));  // Aquí se actualiza el total con el descuento aplicado
+      alert("Descuento aplicado correctamente");
+    } catch (error) {
+      console.error("Error al aplicar descuento:", error.message);
+      alert("Error al aplicar descuento: " + error.message);
+    }
+  };
+>>>>>>> e238de50693b6a9d652a108e1580a1fdee43be2f
 
   const handleCheckout = async () => {
     try {
-        if (cart.length === 0) {
-            alert("Tu carrito está vacío");
-            return;
-        }
-
-        // Validar datos antes de enviar
-        if (!total || !userEmail) {
-            alert("Faltan datos requeridos para procesar el pago");
-            return;
-        }
-
-        const requestBody = {
-            total: total,
-            items: cart.map(item => ({
-                idProducto: item.idProducto,
-                title: item.nombre,
-                quantity: item.quantity,
-                unit_price: item.precio,
-            })),
-            payer: {
-                email: userEmail,
-            },
-        };
-
-        console.log("Datos enviados al backend:", requestBody); // Depuración
-
-        const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Error al crear preferencia de pago");
-        }
-
-        const data = await response.json();
-        if (data.preferenceId) {
-            // Guardar el carrito en localStorage antes de redirigir
-            localStorage.setItem('cart', JSON.stringify(cart));
-            // Redirigir a Mercado Pago
-            window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
-        } else {
-            throw new Error("No se recibió un ID de preferencia válido");
-        }
+      if (cart.length === 0) {
+        alert("Tu carrito está vacío");
+        return;
+      }
+  
+      // Validar datos antes de enviar
+      if (!total || !userEmail) {
+        alert("Faltan datos requeridos para procesar el pago");
+        return;
+      }
+  
+      // Calcular el subtotal sin el envío
+      const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+  
+      // Calcular el descuento aplicado
+      const descuentoAplicado = subtotal * (discountAmount / 100);
+  
+      // Calcular el total con envío y descuento
+      const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
+  
+      const requestBody = {
+        total: totalConDescuentoYEnvio,  // Aquí estás enviando el total final (con envío y descuento)
+        items: cart.map(item => ({
+          idProducto: item.idProducto,
+          title: item.nombre,
+          quantity: item.quantity,
+          unit_price: item.precio,
+        })),
+        payer: {
+          email: userEmail,
+        },
+      };
+  
+      console.log("Datos enviados al backend:", requestBody); // Depuración
+  
+      const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al crear preferencia de pago");
+      }
+  
+      const data = await response.json();
+      if (data.preferenceId) {
+        // Guardar el carrito en localStorage antes de redirigir
+        localStorage.setItem('cart', JSON.stringify(cart));
+        // Redirigir a Mercado Pago
+        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
+      } else {
+        throw new Error("No se recibió un ID de preferencia válido");
+      }
     } catch (error) {
-        console.error("Error al procesar el pago:", error.message);
-        alert("Error al procesar el pago: " + error.message);
+      console.error("Error al procesar el pago:", error.message);
+      alert("Error al procesar el pago: " + error.message);
     }
-};
+  };
 
   if (loading) return <p>Cargando carrito...</p>;
 
@@ -300,26 +353,26 @@ const Cart = () => {
   </div>
 ))}
 
-            <div className="cart-summary">
-              <div className="summary-row">
-                <span>Subtotal</span>
-                <span>${total}</span>
-              </div>
-              <div className="summary-row">
-                <span>Envío</span>
-                <span>$50.00</span>
-              </div>
-              {discountApplied && (
+              <div className="cart-summary">
                 <div className="summary-row">
-                  <span>Descuento</span>
-                  <span>-{discountAmount}%</span>
+                  <span>Subtotal</span>
+                  <span>${cart.reduce((acc, item) => acc + item.precio * item.quantity, 0).toFixed(2)}</span>  {/* Subtotal sin descuento */}
                 </div>
-              )}
-              <div className="summary-row total">
-                <span>Total</span>
-                <span>${(parseFloat(total) + 50 - (parseFloat(total) * (discountAmount / 100))).toFixed(2)}</span>
+                <div className="summary-row">
+                  <span>Envío</span>
+                  <span>$50.00</span>
+                </div>
+                {discountApplied && (
+                  <div className="summary-row">
+                    <span>Descuento</span>
+                    <span>-{discountAmount}%</span>
+                  </div>
+                )}
+                <div className="summary-row total">
+                  <span>Total</span>
+                  <span>${total}</span>  {/* Total final con envío y descuento aplicado */}
+                </div>
               </div>
-            </div>
 
             <div className="discount-section">
               <input
