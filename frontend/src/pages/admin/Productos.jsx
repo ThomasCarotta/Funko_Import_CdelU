@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AgregarProducto from './AgregarProducto';
 import EditarProducto from './EditarProducto';
-
+import Swal from 'sweetalert2';
 function Productos() {
   const [search, setSearch] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -70,11 +70,21 @@ function Productos() {
       if (response.status === 201) {
         await fetchProductos();
         closeModal();
-        alert('Producto creado exitosamente!');
+        Swal.fire({
+          title: "Producto creado exitosamente",
+          icon: "success",
+          confirmButtonText: "OK",
+          timer: 1500
+        });
       }
     } catch (error) {
       console.error('Error detallado:', error.response?.data);
-      alert(`Error: ${error.response?.data?.detail || 'Error al crear producto'}`);
+      Swal.fire({
+        title: "Error",
+        text: error.response?.data?.detail || 'Error al crear producto',
+        icon: "error",
+        confirmButtonText: "Aceptar"
+      });
     }
   };
 
@@ -99,10 +109,21 @@ function Productos() {
   
       await fetchProductos();
       closeModal();
+      Swal.fire({
+        title: "Producto actualizado correctamente",
+        icon: "success",
+        confirmButtonText: "OK",
+        timer: 1500
+      });
     } catch (error) {
       console.error('Error al editar producto:', error);
       console.error('Detalles del error:', error.response?.data);
-      alert(`Error al editar: ${JSON.stringify(error.response?.data)}`);
+      Swal.fire({
+        title: "Error",
+        text: JSON.stringify(error.response?.data),
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   };
   

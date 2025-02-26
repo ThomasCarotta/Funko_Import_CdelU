@@ -33,12 +33,14 @@ urlpatterns = [
     path('auth/add-to-cart/', views.add_to_cart, name='add_to_cart'),
     path('auth/obtener-carrito/', views.obtener_carrito, name='obtener_carrito'),
     path('auth/eliminar-producto-carrito/', views.eliminar_producto_carrito, name='eliminar_producto_carrito'),
-    # path('auth/process_payment/', views.process_payment, name="process_payment"),
     path('auth/create-payment-preference/', views.create_payment_preference, name='create_payment_preference'),
     path('auth/obtener-preguntas-producto/<int:idProducto>/', views.obtener_preguntas_producto, name='obtener_preguntas_producto'),
     path('auth/preguntas/', views.crear_pregunta, name='crear_pregunta'),
     path('auth/responder-pregunta/<int:idPregunta>/', views.responder_pregunta, name='responder_pregunta'),
-    # path('auth/mis-compras/', views.mis_compras, name='mis_compras'),
     path('auth/payment-success/', views.payment_success, name="payment_success"),
     path('auth/get-ventas/', views.get_ventas, name="get_ventas"),
+    path('auth/obtener-resenas-producto/<int:idProducto>/', views.obtener_resenas_producto, name="obtener_resenas_producto"),  # Updated path
+    path('auth/crear-resena/', views.crear_resena, name="crear_resena"),
+    path('auth/update-venta/<int:venta_id>/', views.actualizar_estado_venta, name="actualizar_estado_venta"),
+    path('auth/actualizar-estado-venta/', views.actualizar_estado_venta, name="actualizar_estado_venta"),
     ]

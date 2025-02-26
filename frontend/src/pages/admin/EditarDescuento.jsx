@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 function EditarDescuento({ descuento, onClose, onEditDescuento }) {
   const [updatedDescuento, setUpdatedDescuento] = useState(descuento);
 
   const handleSave = () => {
     if (!updatedDescuento.fechaInicio || !updatedDescuento.fechaFin) {
-      alert('Ambas fechas son obligatorias');
+      Swal.fire({
+        title: "Ambas fechas son obligatorias",
+        icon: "warning",
+        confirmButtonText: "Ok"
+      });
       return;
     }
     onEditDescuento(updatedDescuento);

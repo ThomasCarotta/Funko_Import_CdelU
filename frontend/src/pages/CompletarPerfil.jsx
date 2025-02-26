@@ -47,6 +47,7 @@ const CompletarPerfil = () => {
       // Verifica el mensaje de éxito
       if (data.message === "Perfil actualizado correctamente") {
         // Redirigir al usuario después de completar su perfil
+        localStorage.setItem("userName", formData.nombre);
         navigate("/user");
       } else {
         throw new Error("Error inesperado al completar el perfil");

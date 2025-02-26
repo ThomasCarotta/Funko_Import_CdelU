@@ -3,7 +3,7 @@ from .models import (
     Usuario, Coleccion, carrito, Descuento, Producto, Promocion, IngresoStock, 
     PeticionProducto, ResenaComentario, Pregunta, CarritoDescuento, Factura, 
     LineaFactura, FacturaDescuento, ProductoCarrito, CodigoSeguimiento, Edicion, 
-    Venta, DetalleVenta
+    Venta, DetalleVenta, 
 )
 
 class UsuarioSerializer(serializers.ModelSerializer):

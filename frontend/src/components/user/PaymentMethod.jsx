@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/user/Header";
 import Footer from "../../components/user/Footer";
+import Swal from 'sweetalert2';
 
 const PaymentMethod = () => {
   const navigate = useNavigate();
@@ -53,7 +54,12 @@ const PaymentMethod = () => {
       window.location.href = data.init_point;
     } catch (error) {
       console.error("Error al procesar el pago:", error.message);
-      alert("Error al procesar el pago: " + error.message);
+      Swal.fire({
+        title: "Error al procesar el pago",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "Ok"
+      });
     } finally {
       setLoading(false);
     }

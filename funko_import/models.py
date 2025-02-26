@@ -240,14 +240,16 @@ class ResenaComentario(models.Model): #!CRUD
     idProducto = models.ForeignKey('Producto', on_delete=models.CASCADE)
 
     def clean(self):
-        if not Factura.objects.filter(
-            lineas_factura__id_producto=self.id_producto,
-            idUsuario=self.idUsuario
+        # Verificar si el usuario ha comprado el producto
+        if not DetalleVenta.objects.filter(
+            venta__usuario=self.idUsuario,  # Acceder al usuario a través de la venta
+            producto=self.idProducto
         ).exists():
             raise ValidationError(
                 {'id_producto': 'No puedes reseñar un producto que no compraste.'}
             )
 
+        # Verificar si el usuario ya ha hecho una reseña para este producto
         if ResenaComentario.objects.filter(
             idProducto=self.idProducto,
             idUsuario=self.idUsuario
@@ -262,6 +264,7 @@ class ResenaComentario(models.Model): #!CRUD
 
     def __str__(self):
         return f'Reseña {self.idResenaComentario} - {self.resena}'
+
 
 
 class Pregunta(models.Model): #!CRUD
@@ -297,7 +300,7 @@ class Factura(models.Model):
     pago_total = models.DecimalField(max_digits=10, decimal_places=2,validators=[MinValueValidator(0)])
     forma_pago = models.CharField(max_length=50) #!INUTIL
     fecha_venta = models.DateField(auto_now_add=True)
-    id_Usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    idUsuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
 
     def calcular_total(self): #!cambiar precio porm el precio unitario de linea factura
         lineas_factura = LineaFactura.objects.filter(id_factura=self)
@@ -361,17 +364,27 @@ class CodigoSeguimiento(models.Model): #?CRUD despues vemos
     def __str__(self):
         return f'Codigo Seguimiento {self.codigo} - {self.id1}'
 
+
+import random
+import string
+
+def generar_codigo_seguimiento():
+    longitud = 10
+    caracteres = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(caracteres, k=longitud))
+
 class Venta(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ventas')
     fecha_venta = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     descuento = models.ForeignKey('Descuento', on_delete=models.SET_NULL, null=True, blank=True)
     estado = models.CharField(max_length=20, choices=[
-        ('pendiente', 'Pendiente'),
-        ('pagado', 'Pagado'),
+        ('en_espera', 'En espera'),
+        ('despachado', 'Despachado'),
         ('cancelado', 'Cancelado'),
-    ], default='pendiente')
+    ], default='en_espera')
     payment_id = models.CharField(max_length=100, null=True, blank=True)  # Nuevo campo para payment_id
+    codigo_seguimiento = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
     def aplicar_descuento(self):
         """Aplica el descuento al total de la venta si es aplicable."""
@@ -380,8 +393,22 @@ class Venta(models.Model):
             self.total -= descuento
             self.save()
 
+    def save(self, *args, **kwargs):
+        # Generar código de seguimiento solo si el estado cambia a "despachado"
+        if self.estado == 'despachado' and not self.codigo_seguimiento:
+            self.codigo_seguimiento = generar_codigo_seguimiento()
+        
+        # Evitar que el estado cambie de "despachado" a "en espera" o "cancelado"
+        if self.pk:  # Solo si la venta ya existe
+            original = Venta.objects.get(pk=self.pk)
+            if original.estado == 'despachado' and self.estado != 'despachado':
+                raise ValidationError("No se puede cambiar el estado de una venta despachada.")
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Venta {self.id} - {self.usuario.correo} - {self.fecha_venta}"
+
 class DetalleVenta(models.Model):
     venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE)

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 function AgregarPromocion({ productos, onClose, onSave }) {
   const [nuevaPromo, setNuevaPromo] = useState({
@@ -15,7 +16,11 @@ function AgregarPromocion({ productos, onClose, onSave }) {
 
   const handleSave = () => {
     if (nuevaPromo.productos_seleccionados.length === 0 || !nuevaPromo.fecha_inicio || !nuevaPromo.fecha_fin) {
-      alert('Todos los campos son obligatorios');
+      Swal.fire({
+        title: "Todos los campos son obligatorios",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
     onSave({

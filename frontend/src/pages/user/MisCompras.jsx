@@ -47,21 +47,23 @@ const MisCompras = () => {
         <ul>
           {ventas.map((venta) => (
             <li key={venta.id} className="venta-card">
-              <h2>Venta ID: {venta.id}</h2>
-              <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
-              <p>Total: ${venta.total}</p>
-              <p>Código de seguimiento: <strong>ENV123456789</strong></p> 
-              <h3>Productos:</h3>
-              <ul className="producto-list">
-                {venta.productos.map((producto) => (
-                  <li key={producto.id} className="producto-item">
-                    <p>Producto: {producto.nombre}</p>
-                    <p>Cantidad: {producto.cantidad}</p>
-                    <p>Precio unitario: ${producto.precio_unitario}</p>
-                    <p>Total: ${producto.total}</p>
-                  </li>
-                ))}
-              </ul>
+                <h2>Venta ID: {venta.id}</h2>
+                <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
+                <p>Total: ${venta.total}</p>
+                {venta.codigo_seguimiento && (
+                    <p>Código de seguimiento: <strong>{venta.codigo_seguimiento}</strong></p>
+                )}
+                <h3>Productos:</h3>
+                <ul className="producto-list">
+                    {venta.productos.map((producto) => (
+                        <li key={producto.id} className="producto-item">
+                            <p>Producto: {producto.nombre}</p>
+                            <p>Cantidad: {producto.cantidad}</p>
+                            <p>Precio unitario: ${producto.precio_unitario}</p>
+                            <p>Total: ${producto.total}</p>
+                        </li>
+                    ))}
+                </ul>
             </li>
           ))}
         </ul>

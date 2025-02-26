@@ -937,10 +937,7 @@ def payment_success(request):
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
-# from rest_framework.decorators import api_view, permission_classes
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework.response import Response
-# from .models import Venta, DetalleVenta
+from django.db.models import Sum
 
 @api_view(['GET'])
 def get_ventas(request):
@@ -978,6 +975,77 @@ def get_ventas(request):
             'fecha_venta': venta.fecha_venta,
             'total': venta.total,
             'productos': productos,
+            'codigo_seguimiento': venta.codigo_seguimiento
         })
 
     return Response(ventas_con_productos)
+
+@api_view(['GET'])
+def obtener_resenas_producto(request, idProducto):
+    try:
+        resenas = ResenaComentario.objects.filter(idProducto=idProducto).select_related('idUsuario')
+        serializer = ResenaComentarioSerializer(resenas, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def crear_resena(request):
+    try:
+        data = request.data
+        correo = data.get("correo")
+        idProducto = data.get("idProducto")
+        resena = data.get("resena")
+        comentario = data.get("comentario")
+
+        if not all([correo, idProducto, resena, comentario]):
+            return Response({"error": "Datos incompletos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        usuario = Usuario.objects.get(correo=correo)
+        producto = Producto.objects.get(idProducto=idProducto)
+
+        # Verificar si el usuario ha comprado el producto
+        if not DetalleVenta.objects.filter(
+            venta__usuario=usuario,  # Acceder al usuario a través de la venta
+            producto=producto
+        ).exists():
+            return Response({"error": "Debes comprar el producto antes de dejar una reseña"}, status=status.HTTP_403_FORBIDDEN)
+
+        nueva_resena = ResenaComentario.objects.create(
+            resena=resena,
+            comentario=comentario,
+            idUsuario=usuario,
+            idProducto=producto
+        )
+
+        serializer = ResenaComentarioSerializer(nueva_resena)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    except Usuario.DoesNotExist:
+        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Producto.DoesNotExist:
+        return Response({"error": "Producto no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PATCH'])
+def actualizar_estado_venta(request, venta_id):
+    try:
+        venta = Venta.objects.get(id=venta_id)
+        nuevo_estado = request.data.get('estado')
+
+        # Validar que no se pueda cambiar de "despachado" a otro estado
+        if venta.estado == 'despachado' and nuevo_estado != 'despachado':
+            return Response({"error": "No se puede cambiar el estado de una venta despachada."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar que el nuevo estado sea válido
+        if nuevo_estado not in ['en_espera', 'despachado', 'cancelado']:
+            return Response({"error": "Estado no válido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        venta.estado = nuevo_estado
+        venta.save()
+
+        return Response({"message": "Estado de la venta actualizado", "codigo_seguimiento": venta.codigo_seguimiento})
+    except Venta.DoesNotExist:
+        return Response({"error": "Venta no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+

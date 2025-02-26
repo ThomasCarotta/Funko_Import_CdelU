@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 function AgregarEdicion({ onCancel, onSave }) {
   const [newEdition, setNewEdition] = useState({
@@ -7,7 +8,11 @@ function AgregarEdicion({ onCancel, onSave }) {
 
   const handleSave = () => {
     if (newEdition.nombre.trim() === '') {
-      alert('El nombre de la edición es obligatorio.');
+      Swal.fire({
+        title: "El nombre de la edición es obligatorio",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
     onSave(newEdition); // Enviamos solo el nombre

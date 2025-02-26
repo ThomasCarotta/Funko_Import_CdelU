@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AgregarPromocion from './AgregarPromocion';
 import EditarPromocion from './EditarPromocion';
+import Swal from 'sweetalert2';
 
 function Promociones() {
   const [search, setSearch] = useState('');
@@ -60,9 +61,20 @@ function Promociones() {
       
       setPromociones(prev => [...prev, ...nuevasPromociones]);
       setIsAdding(false);
+      Swal.fire({
+        title: "Promoción agregada exitosamente",
+        icon: "success",
+        confirmButtonText: "OK",
+        timer: 1500
+      });
     } catch (err) {
       console.error('Error agregando promoción:', err);
-      alert('Error al guardar. Verifica los datos.');
+      Swal.fire({
+        title: "Error",
+        text: "Error al guardar. Verifica los datos.",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   };
 
@@ -89,6 +101,12 @@ function Promociones() {
         prev.map(p => p.id_promocion === updatedPromo.id_promocion ? promocionActualizada : p)
       );
       setIsEditing(false);
+      Swal.fire({
+        title: "Promoción actualizada exitosamente",
+        icon: "success",
+        confirmButtonText: "OK",
+        timer: 1500
+      });
     } catch (err) {
       const errorDetails = err.response?.data;
       console.error('Error completo:', errorDetails);
@@ -98,7 +116,12 @@ function Promociones() {
         errorDetails?.non_field_errors?.[0] ||
         'Error al guardar. Verifica los datos';
       
-      alert(`Error: ${errorMessage}`);
+      Swal.fire({
+          title: "Error",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK"
+      });
     }
   };
 

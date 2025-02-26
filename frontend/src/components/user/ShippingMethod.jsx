@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom"; // Importa useLocat
 import "../../App.css";
 import Header from "../../components/user/Header";
 import Footer from "../../components/user/Footer";
+import Swal from 'sweetalert2';
 
 const ShippingMethod = () => {
   const [address, setAddress] = useState("");
@@ -16,7 +17,11 @@ const ShippingMethod = () => {
 
   const handleNext = () => {
     if (!address) {
-      alert("Por favor ingresa tu dirección");
+      Swal.fire({
+        title: "Por favor ingresa tu dirección",
+        icon: "warning",
+        confirmButtonText: "ok"
+      });
       return;
     }
 

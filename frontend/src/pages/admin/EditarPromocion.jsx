@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 function EditarPromocion({ promocion, onClose, onSave }) {
   const [editedPromo, setEditedPromo] = useState({
@@ -26,12 +27,20 @@ function EditarPromocion({ promocion, onClose, onSave }) {
 
   const handleSave = () => {
     if (!editedPromo.porcentaje || !editedPromo.fecha_inicio || !editedPromo.fecha_fin) {
-      alert('Todos los campos son obligatorios');
+      Swal.fire({
+        title: "Todos los campos son obligatorios",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
 
     if (new Date(editedPromo.fecha_fin) < new Date(editedPromo.fecha_inicio)) {
-      alert('La fecha de fin no puede ser anterior a la fecha de inicio');
+      Swal.fire({
+        title: "La fecha de fin no puede ser anterior a la fecha de inicio",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
 

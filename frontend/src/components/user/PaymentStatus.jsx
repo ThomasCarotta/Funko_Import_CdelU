@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 const PaymentStatus = () => {
   const navigate = useNavigate();
@@ -19,7 +20,11 @@ const PaymentStatus = () => {
       const userEmail = localStorage.getItem("userEmail");
 
       if (!cart.length || !userEmail) {
-        alert("No se encontraron datos de la compra");
+        Swal.fire({
+          title: "No se encontraron datos de la compra",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         navigate("/"); // Redirigir al home si no hay datos
         return;
       }
@@ -64,23 +69,42 @@ const PaymentStatus = () => {
         .then((data) => {
           console.log("Datos recibidos del backend:", data); // Depuración
           if (data.message === "Compra registrada con éxito") {
-            alert("Compra registrada con éxito");
+            Swal.fire({
+              title: "Compra registrada con éxito",
+              icon: "success",
+              confirmButtonText: "OK"
+            });
             // Limpiar el carrito
             localStorage.removeItem("cart");
             // Redirigir al usuario a la página de inicio (home)
             navigate("/");
           } else {
-            alert("Error al registrar la compra: " + (data.error || "Error desconocido"));
+            Swal.fire({
+              title: "Error al registrar la compra",
+              text: data.error || "Error desconocido",
+              icon: "error",
+              confirmButtonText: "OK"
+            });
             navigate("/"); // Redirigir al home en caso de error
           }
         })
         .catch((error) => {
           console.error("Error al registrar la compra:", error);
-          alert("Error al registrar la compra: " + error.message);
+          Swal.fire({
+            title: "Error al registrar la compra",
+            text: error.message,
+            icon: "error",
+            confirmButtonText: "OK"
+          });
           navigate("/"); // Redirigir al home en caso de error
         });
     } else {
-      alert("El pago no fue exitoso. Por favor, intente de nuevo.");
+      Swal.fire({
+        title: "El pago no fue exitoso",
+        text: "Por favor, intente de nuevo.",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
       navigate("/"); // Redirigir al home si el pago no fue aprobado
     }
   }, [location, navigate]);

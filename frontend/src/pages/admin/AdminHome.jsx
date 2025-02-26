@@ -11,11 +11,12 @@ function AdminHome() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/auth/admin-dashboard-data/")
+    fetch("http://localhost:8000/api/auth/admin-dashboard-data/")  // URL correcta
       .then((response) => response.json())
       .then((json) => setData(json))
       .catch((error) => console.error("Error al obtener datos:", error));
   }, []);
+  
 
   return (
     <div className="main-content">

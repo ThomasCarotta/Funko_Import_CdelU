@@ -9,6 +9,7 @@ const Header = ({ setSearchTerm }) => {
   let timeoutId = null; // Variable para manejar el temporizador
 
   const isUserLoggedIn = !!localStorage.getItem("user_token");
+  const userName = localStorage.getItem("userName");
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -17,6 +18,7 @@ const Header = ({ setSearchTerm }) => {
   const handleLogout = () => {
     localStorage.removeItem("user_token");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
     navigate("/login");
   };
 
@@ -39,17 +41,13 @@ const Header = ({ setSearchTerm }) => {
           type="text"
           placeholder="Buscar productos..."
           className="search-inputUS w-full max-w-xs p-2 rounded-md"
-          onChange={handleSearch}  
+          onChange={handleSearch}
         />
       </div>
 
       {/* Logo centrado */}
       <div className="logo-containerUS absolute left-1/2 transform -translate-x-1/2 text-center">
-        <img
-          src={logo}
-          alt="Logo Mi Tienda"
-          className="logo-imageUS h-16"
-        />
+        <img src={logo} alt="Logo Mi Tienda" className="logo-imageUS h-16" />
       </div>
 
       {/* Menú y carrito */}
@@ -58,55 +56,61 @@ const Header = ({ setSearchTerm }) => {
           <button className="menu-btnUS text-white font-bold">Inicio</button>
         </Link>
 
-        <Link to="/user/carrito">
-          <button className="cart-btnUS text-white font-bold">
-            <i className="fas fa-shopping-cart"></i> Carrito
-          </button>
-        </Link>
+        {/* Mostrar carrito solo si está logueado */}
+        {isUserLoggedIn && (
+          <Link to="/user/carrito">
+            <button className="cart-btnUS text-white font-bold">
+              <i className="fas fa-shopping-cart"></i> Carrito
+            </button>
+          </Link>
+        )}
 
-        <Link to="/user/favorites">
-          <button className="cart-btnUS text-white font-bold">
-            <i className="fas fa-heart"></i> Favoritos
-          </button>
-        </Link>
+        {/* Mostrar favoritos solo si está logueado */}
+        {isUserLoggedIn && (
+          <Link to="/user/favorites">
+            <button className="cart-btnUS text-white font-bold">
+              <i className="fas fa-heart"></i> Favoritos
+            </button>
+          </Link>
+        )}
 
         {/* Ícono de usuario con menú desplegable */}
-<div
-  className="relative"
-  onMouseEnter={handleMouseEnter}
-  onMouseLeave={handleMouseLeave}
->
-  <button className="user-iconUS text-white font-bold">
-    <i className="fas fa-user"></i> {isUserLoggedIn ? localStorage.getItem("userEmail") : "Iniciar sesión"}
-  </button>
+        <div
+          className="relative"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <button className="user-iconUS text-white font-bold">
+            <i className="fas fa-user"></i>{" "}
+            {isUserLoggedIn ? userName : "Iniciar sesión"}
+          </button>
 
-  {isDropdownOpen && (
-    <div className="dropdown-menuUS">
-      {isUserLoggedIn && (
-        <Link to="/user/perfil" className="dropdown-itemUS">
-          Mi Perfil
-        </Link>
-      )}
+          {isDropdownOpen && (
+            <div className="dropdown-menuUS">
+              {isUserLoggedIn && (
+                <Link to="/user/perfil" className="dropdown-itemUS">
+                  Mi Perfil
+                </Link>
+              )}
 
-      {isUserLoggedIn && (
-        <Link to="/user/miscompras" className="dropdown-itemUS">
-          Mis Compras
-        </Link>
-      )}
+              {isUserLoggedIn && (
+                <Link to="/user/miscompras" className="dropdown-itemUS">
+                  Mis Compras
+                </Link>
+              )}
 
-      {isUserLoggedIn ? (
-        <button onClick={handleLogout} className="dropdown-itemUS">
-          Cerrar Sesión
-        </button>
-      ) : (
-        <Link to="/login" className="dropdown-itemUS">
-          Iniciar Sesión
-        </Link>
-      )}
-    </div>
-  )}
-</div>
-
+              {isUserLoggedIn ? (
+                <button onClick={handleLogout} className="dropdown-itemUS">
+                  Cerrar Sesión
+                </button>
+              ) : (
+                <Link to="/login" className="dropdown-itemUS">
+                  Iniciar Sesión
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../App.css";
 import Header from "../../components/user/Header";
 import Footer from "../../components/user/Footer";
+import Swal from 'sweetalert2';
 
 const Cart = () => {
   const [cart, setCart] = useState([]);
@@ -18,7 +19,11 @@ const Cart = () => {
   const fetchCart = async () => {
     try {
       if (!userEmail) {
-        alert("Usuario no autenticado");
+        Swal.fire({
+          title: "Usuario no autenticado",
+          icon: "warning",
+          confirmButtonText: "ok"
+        });
         return;
       }
 
@@ -31,7 +36,11 @@ const Cart = () => {
 
       const data = await response.json();
       if (data.error) {
-        alert(data.error);
+        Swal.fire({
+          title: data.error,
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         setLoading(false);
         return;
       }
@@ -57,7 +66,11 @@ const Cart = () => {
     if (status === 'success') {
       // Obtener los datos del carrito desde el estado
       if (!cart.length || !userEmail) {
-        alert("No se encontraron datos de la compra");
+        Swal.fire({
+          title: "No se encontraron datos de la compra",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
         return;
       }
 
@@ -85,18 +98,32 @@ const Cart = () => {
       .then(response => response.json())
       .then(data => {
         if (data.message === "Compra registrada con éxito") {
-          alert("Compra registrada con éxito");
+          Swal.fire({
+            title: "Compra registrada con éxito",
+            icon: "success",
+            confirmButtonText: "OK"
+          });
           // Limpiar el carrito
           setCart([]);
           // Redirigir al usuario a la página de inicio
           navigate("/");
         } else {
-          alert("Error al registrar la compra: " + data.error);
+          Swal.fire({
+            title: "Error al registrar la compra",
+            text: data.error,
+            icon: "error",
+            confirmButtonText: "OK"
+          });
         }
       })
       .catch(error => {
         console.error("Error al registrar la compra:", error);
-        alert("Error al registrar la compra");
+        Swal.fire({
+          title: "Error al registrar la compra",
+          text: error.message,
+          icon: "error",
+          confirmButtonText: "OK"
+        });
       });
     }
   }, [cart, userEmail, navigate]);
@@ -132,10 +159,20 @@ const Cart = () => {
       console.log("Producto eliminado con éxito:", data.message);
 
       await fetchCart();
-      alert("Producto eliminado del carrito");
+      Swal.fire({
+        title: "Producto eliminado del carrito",
+        icon: "success",
+        confirmButtonText: "OK",
+        timer: 1500
+      });
     } catch (error) {
       console.error("Error al eliminar producto del carrito:", error.message);
-      alert("Error al eliminar producto del carrito: " + error.message);
+      Swal.fire({
+        title: "Error al eliminar producto del carrito",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   };
 
@@ -152,7 +189,11 @@ const Cart = () => {
 
   const applyDiscount = async () => {
     if (!discountCode) {
-      alert("Por favor, ingresa un código de descuento.");
+      Swal.fire({
+        title: "Por favor, ingresa un código de descuento.",
+        icon: "warning",
+        confirmButtonText: "ok"
+      });
       return;
     }
   
@@ -182,23 +223,41 @@ const Cart = () => {
       const totalConDescuento = (subtotal - descuentoAplicado) + 50; // Aplicar descuento solo al subtotal y luego sumar el envío
   
       setTotal(totalConDescuento.toFixed(2));  // Aquí se actualiza el total con el descuento aplicado
-      alert("Descuento aplicado correctamente");
+      Swal.fire({
+        title: "Descuento aplicado correctamente",
+        icon: "success",
+        confirmButtonText: "ok",
+        timer: 1500
+      });
     } catch (error) {
       console.error("Error al aplicar descuento:", error.message);
-      alert("Error al aplicar descuento: " + error.message);
+      Swal.fire({
+        title: "Error al aplicar descuento",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK"
+      });
     }
   };
 
   const handleCheckout = async () => {
     try {
         if (cart.length === 0) {
-            alert("Tu carrito está vacío");
+          Swal.fire({
+            title: "Tu carrito está vacío",
+            icon: "warning",
+            confirmButtonText: "OK"
+          });
             return;
         }
 
         // Validar datos antes de enviar
         if (!total || !userEmail) {
-            alert("Faltan datos requeridos para procesar el pago");
+          Swal.fire({
+            title: "Faltan datos requeridos para procesar el pago",
+            icon: "error",
+            confirmButtonText: "OK"
+          });
             return;
         }
 
@@ -250,7 +309,12 @@ const Cart = () => {
         }
     } catch (error) {
         console.error("Error al procesar el pago:", error.message);
-        alert("Error al procesar el pago: " + error.message);
+        Swal.fire({
+          title: "Error al procesar el pago",
+          text: error.message,
+          icon: "error",
+          confirmButtonText: "OK"
+        });
     }
 };
 

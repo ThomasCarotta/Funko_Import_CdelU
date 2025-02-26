@@ -880,3 +880,76 @@ tr:hover {
 .volver-btn:hover {
   background-color: #0056b3;
 }
+
+
+/* Estilos para la tabla de ventas */
+.ventas-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.ventas-table th, .ventas-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.ventas-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.ventas-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Estilos para el select de estado */
+.ventas-table select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ventas-table select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  outline: none;
+}
+
+.ventas-table select:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Estilos para los estados */
+.ventas-table select option[value="en_espera"] {
+  color: #ffc107; /* Amarillo para "En espera" */
+}
+
+.ventas-table select option[value="despachado"] {
+  color: #28a745; /* Verde para "Despachado" */
+}
+/* 
+.ventas-table select option[value="cancelado"] {
+  color: #dc3545; /* Rojo para "Cancelado" */
+
+
+/* Estilos para el código de seguimiento */
+.codigo-seguimiento {
+  font-weight: bold;
+  color: #007bff; /* Azul para el código de seguimiento */
+  background-color: #e9f5ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 5px;
+}

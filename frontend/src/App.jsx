@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-
 import LoginPage from "./pages/LoginPage";
 import CompletarPerfil from "./pages/CompletarPerfil";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Admin
 import HeaderAdmin from "./components/admin/HeaderAdmin";
@@ -61,8 +62,10 @@ function App() {
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<UserHome />} />
           <Route path="funko/:idProducto" element={<Funko />} />
-          <Route path="carrito" element={<Cart />} />
-          <Route path="favorites" element={<Favorites />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="carrito" element={<Cart />} />
+            <Route path="favorites" element={<Favorites />} />
+          </Route>
           <Route path="perfil" element={<PerfilUser />} />
           <Route path="shipping" element={<ShippingMethod />} />
           <Route path="payment" element={<PaymentMethod />} />

@@ -35,21 +35,26 @@ const VentasAdmin = () => {
 
   const handleStatusChange = async (ventaId, newStatus) => {
     try {
-      // Actualiza el estado en el backend
-      await axios.patch(`http://127.0.0.1:8000/api/auth/update-venta/${ventaId}/`, {
-        estado: newStatus,
-      });
+        const response = await axios.patch(`http://127.0.0.1:8000/api/auth/update-venta/${ventaId}/`, {
+            estado: newStatus,
+        });
 
-      // Actualiza el estado de la venta en el frontend
-      setVentas((prevVentas) =>
-        prevVentas.map((venta) =>
-          venta.id === ventaId ? { ...venta, estado: newStatus } : venta
-        )
-      );
+        // Actualiza el estado de la venta en el frontend
+        setVentas((prevVentas) =>
+            prevVentas.map((venta) =>
+                venta.id === ventaId
+                    ? {
+                        ...venta,
+                        estado: newStatus, // Actualiza el estado
+                        codigo_seguimiento: response.data.codigo_seguimiento || venta.codigo_seguimiento, // Actualiza el código de seguimiento si existe
+                    }
+                    : venta
+            )
+        );
     } catch (err) {
-      console.error("Error al actualizar el estado de la venta:", err);
+        console.error("Error al actualizar el estado de la venta:", err);
     }
-  };
+};
 
   if (loading) return <div className="ventas-container">Cargando...</div>;
   if (error) return <div className="ventas-container error">{error}</div>;
@@ -71,32 +76,39 @@ const VentasAdmin = () => {
             </tr>
           </thead>
           <tbody>
-            {ventas.map((venta) => (
-              <tr key={venta.id}>
-                <td>{venta.id}</td>
-                <td>{venta.usuario}</td>
-                <td>{new Date(venta.fecha_venta).toLocaleDateString()}</td>
-                <td>${venta.total}</td>
-                <td>
-                  <ul className="productos-list">
-                    {venta.productos.map((producto) => (
-                      <li key={producto.id}>
+          {ventas.map((venta) => (
+    <tr key={venta.id}>
+        <td>{venta.id}</td>
+        <td>{venta.usuario}</td>
+        <td>{new Date(venta.fecha_venta).toLocaleDateString()}</td>
+        <td>${venta.total}</td>
+        <td>
+            <ul className="productos-list">
+                {venta.productos.map((producto) => (
+                    <li key={producto.id}>
                         {producto.nombre} x{producto.cantidad} - ${producto.total}
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-                <td>
-                  <select
-                    value={venta.estado || "en_espera"}
-                    onChange={(e) => handleStatusChange(venta.id, e.target.value)}
-                  >
-                    <option value="en_espera">En espera</option>
-                    <option value="despachado">Despachado</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
+                    </li>
+                ))}
+            </ul>
+        </td>
+        <td>
+            <select
+                value={venta.estado || "en_espera"}
+                onChange={(e) => handleStatusChange(venta.id, e.target.value)}
+                disabled={venta.estado === 'despachado'}
+            >
+                <option value="en_espera">En espera</option>
+                <option value="despachado">Despachado</option>
+                {/* <option value="cancelado">Cancelado</option> */}
+            </select>
+            {venta.codigo_seguimiento && (
+                <div className="codigo-seguimiento">
+                    Código: {venta.codigo_seguimiento}
+                </div>
+            )}
+        </td>
+    </tr>
+))}
           </tbody>
         </table>
       ) : (

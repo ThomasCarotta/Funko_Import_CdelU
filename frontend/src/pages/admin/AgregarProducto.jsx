@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 function AgregarProducto({ closeModal, onAddProduct, colecciones = [], ediciones = [] }) {
   const [newProduct, setNewProduct] = useState({
@@ -38,7 +39,11 @@ function AgregarProducto({ closeModal, onAddProduct, colecciones = [], ediciones
   const handleAddProduct = () => {
     // Validación de campos obligatorios
     if (!newProduct.nombre || newProduct.precio <= 0 || newProduct.cantidadDisp < 0 || !newProduct.idColeccion) {
-      alert('Por favor complete todos los campos obligatorios (*)');
+      Swal.fire({
+        title: "Por favor complete todos los campos obligatorios (*)",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
 

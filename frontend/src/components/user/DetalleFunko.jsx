@@ -10,6 +10,8 @@ function DetalleFunko() {
   const [preguntas, setPreguntas] = useState([]);
   const [nuevaPregunta, setNuevaPregunta] = useState("");
   const [respuestaPregunta, setRespuestaPregunta] = useState({});
+  const [resenas, setResenas] = useState([]);
+  const [nuevaResena, setNuevaResena] = useState({ resena: 5, comentario: "" });
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -28,10 +30,22 @@ function DetalleFunko() {
     };
   }, []);
 
-  // Verificación del valor de userToken
   useEffect(() => {
-    console.log("User email:", userEmail); // Verificar si se establece correctamente
-  }, [userEmail]);
+    const fetchResenas = async () => {
+      try {
+        const respuesta = await fetch(`http://localhost:8000/api/auth/obtener-resenas-producto/${idProducto}/`);
+        if (!respuesta.ok) {
+          throw new Error("Error al cargar las reseñas");
+        }
+        const data = await respuesta.json();
+        setResenas(data);
+      } catch (error) {
+        console.error("Error al cargar las reseñas:", error);
+      }
+    };
+
+    fetchResenas();
+  }, [idProducto]);
 
   useEffect(() => {
     // Convertir idProducto a número
@@ -82,6 +96,41 @@ function DetalleFunko() {
 
     fetchPreguntas();
   }, [idProducto]);
+
+  const handleSubmitResena = async (e) => {
+    e.preventDefault();
+    if (!userEmail) {
+      alert("Por favor, inicia sesión para hacer una reseña");
+      return;
+    }
+
+    try {
+      const respuesta = await fetch("http://localhost:8000/api/auth/crear-resena/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          correo: userEmail,
+          idProducto: Number(producto.idProducto), // Convertir a número si es necesario
+          resena: Number(nuevaResena.resena), // Asegurar que es un número
+          comentario: nuevaResena.comentario.trim(), // Evitar espacios vacíos
+        }),
+      });
+
+      if (!respuesta.ok) {
+        throw new Error(await respuesta.text()); // Obtener mensaje de error
+      }
+
+      const data = await respuesta.json();
+      setResenas([...resenas, data]);
+      setNuevaResena({ resena: 5, comentario: "" });
+      alert("Reseña enviada correctamente");
+    } catch (error) {
+      console.error("Error al enviar la reseña:", error);
+      alert("Error al enviar la reseña: " + error.message);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!userEmail) {
@@ -134,7 +183,7 @@ function DetalleFunko() {
         },
         body: JSON.stringify({
           pregunta: nuevaPregunta,
-          id_producto: producto.idProducto,
+          idProducto: producto.idProducto,
           correo: userEmail, // Envía el correo del usuario
         }),
       });
@@ -197,28 +246,28 @@ function DetalleFunko() {
       <h2>{producto.nombre}</h2>
       <p>{producto.descripcion}</p>
       <p>
-  Precio:{" "}
-  {producto.precio_con_descuento && producto.porcentaje_descuento ? (
-    <>
-      <span style={{ textDecoration: "line-through", color: "red" }}>
-        {producto.precio} USD
-      </span>{" "}
-      <strong>{producto.precio_con_descuento} USD</strong>
-    </>
-  ) : (
-    <strong>{producto.precio} USD</strong>
-  )}
-</p>
-{producto.porcentaje_descuento && (
-  <div className="descuento-banner">
-    ¡{producto.porcentaje_descuento}% de descuento!
-  </div>
-)}
+        Precio:{" "}
+        {producto.precio_con_descuento && producto.porcentaje_descuento ? (
+          <>
+            <span style={{ textDecoration: "line-through", color: "red" }}>
+              {producto.precio} USD
+            </span>{" "}
+            <strong>{producto.precio_con_descuento} USD</strong>
+          </>
+        ) : (
+          <strong>{producto.precio} USD</strong>
+        )}
+      </p>
+      {producto.porcentaje_descuento && (
+        <div className="descuento-banner">
+          ¡{producto.porcentaje_descuento}% de descuento!
+        </div>
+      )}
       <p>Cantidad disponible: {producto.cantidadDisp}</p>
       <p>{producto.esEspecial ? "Edición especial" : "Edición estándar"}</p>
       <button onClick={handleAddToCart}>Añadir al carrito</button>
 
-      {/* Sección de preguntas y respuestas */}
+      {/* Sección de preguntas y respuestas (existente) */}
       <div className="preguntas-respuestas" style={{ marginTop: "20px", borderTop: "1px solid #ccc", paddingTop: "20px" }}>
         <h3>Preguntas y respuestas</h3>
 
@@ -264,6 +313,50 @@ function DetalleFunko() {
                   </div>
                 )
               )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Nueva sección de reseñas y comentarios */}
+      <div className="resenas-comentarios" style={{ marginTop: "20px", borderTop: "1px solid #ccc", paddingTop: "20px" }}>
+        <h3>Reseñas y comentarios</h3>
+
+        {/* Formulario para hacer reseñas */}
+        <form onSubmit={handleSubmitResena} style={{ marginBottom: "20px" }}>
+          <label>
+            Valoración:
+            <select
+              value={nuevaResena.resena}
+              onChange={(e) => setNuevaResena({ ...nuevaResena, resena: e.target.value })}
+            >
+              {[1, 2, 3, 4, 5].map((valor) => (
+                <option key={valor} value={valor}>{valor}</option>
+              ))}
+            </select>
+          </label>
+          <textarea
+            value={nuevaResena.comentario}
+            onChange={(e) => setNuevaResena({ ...nuevaResena, comentario: e.target.value })}
+            placeholder="Escribe tu reseña aquí..."
+            style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+          />
+          <button
+            type="submit"
+            style={{ marginTop: "10px", padding: "10px 20px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}
+          >
+            Enviar reseña
+          </button>
+        </form>
+
+        {/* Listado de reseñas */}
+        {resenas.length === 0 ? (
+          <p>No hay reseñas para este producto.</p>
+        ) : (
+          resenas.map((resena) => (
+            <div key={resena.idResenaComentario} style={{ marginBottom: "20px", padding: "10px", border: "1px solid #ddd", borderRadius: "5px" }}>
+              <p><strong>{resena.idUsuario.nombre || resena.idUsuario.correo}</strong>: {resena.comentario}</p>
+              <p>Valoración: {resena.resena} / 5</p>
             </div>
           ))
         )}

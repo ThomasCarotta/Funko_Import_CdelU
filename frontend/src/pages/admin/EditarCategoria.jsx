@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 function EditarCategoria({ category, onClose, onEditCategory }) {
   const [updatedCategory, setUpdatedCategory] = useState(category);
 
   const handleSave = () => {
     if (updatedCategory.nombre.trim() === '') {
-      alert('El nombre de la categoría es obligatorio.');
+      Swal.fire({
+        title: "El nombre de la categoría es obligatorio",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       return;
     }
     onEditCategory(updatedCategory);
