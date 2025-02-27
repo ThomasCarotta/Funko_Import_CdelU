@@ -197,7 +197,7 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-ACCESS_TOKEN = "ACCESS_TOKEN"
+ACCESS_TOKEN = "si subo esto thomas me mata"
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
 
 # settings.py

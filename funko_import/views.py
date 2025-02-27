@@ -882,6 +882,10 @@ def payment_success(request):
             if not payment_id or not userEmail or not total or not items:
                 return JsonResponse({"error": "Datos incompletos"}, status=400)
 
+            # Verificar si ya existe una venta con este payment_id
+            if Venta.objects.filter(payment_id=payment_id).exists():
+                return JsonResponse({"error": "Venta ya registrada"}, status=400)
+
             # Verificar el pago con Mercado Pago
             headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
             mp_response = requests.get(f"https://api.mercadopago.com/v1/payments/{payment_id}", headers=headers)
