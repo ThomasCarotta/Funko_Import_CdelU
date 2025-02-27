@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from . import views
+from .views import getColecciones  # Asegúrate de importar la función
 
 
 router = routers.DefaultRouter()
@@ -20,9 +21,8 @@ router.register(r'lineafacturas', views.lineaFacturaView, basename='lineafactura
 router.register(r'ingresostock', views.IngresoStockView, basename='ingresostock')
 
 urlpatterns = [
-    path('', include(router.urls)),  # Rutas del router bajo el prefijo 'api/auth/'
-    path('auth/google-login/', views.google_login, name='google_login'),  # Ahora estÃ¡ bajo 'api/auth/google-login/'
-    # path("process_payment/", views.process_payment, name="process_payment"),
+    path('', include(router.urls)),  
+    path('auth/google-login/', views.google_login, name='google_login'),  
     path('auth/completar-perfil/', views.completar_perfil, name='completar_perfil'),
     path('auth/user-data/', views.user_data, name='user_data'),
     path('auth/update-profile/', views.update_profile, name='update_profile'),
@@ -43,4 +43,7 @@ urlpatterns = [
     path('auth/crear-resena/', views.crear_resena, name="crear_resena"),
     path('auth/update-venta/<int:venta_id>/', views.actualizar_estado_venta, name="actualizar_estado_venta"),
     path('auth/actualizar-estado-venta/', views.actualizar_estado_venta, name="actualizar_estado_venta"),
+    path('auth/obtener-colecciones/', getColecciones, name='obtener-colecciones'),
+    path('auth/limpiar-carrito/', views.limpiar_carrito, name='limpiar_carrito'),
+
     ]

@@ -1,15 +1,22 @@
+
 import React, { useEffect, useState } from "react";
 import FunkoCard from "../user/FunkoCard";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 import "../../App.css";
 import { useNavigate } from "react-router-dom";
+import banner from "../../assets/banner.jpg";
 
 function GridFunkos({ searchTerm }) {
   const [productos, setProductos] = useState([]);
   const [sortedProductos, setSortedProductos] = useState([]);
   const [filterOption, setFilterOption] = useState("all");
+  const [colecciones, setColecciones] = useState([]);
   const navigate = useNavigate();
 
-  // Cargar productos desde la API de Django
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,15 +31,25 @@ function GridFunkos({ searchTerm }) {
     fetchData();
   }, []);
 
-  // Filtrar por término de búsqueda
-  const filteredProductos = sortedProductos.filter(producto =>
+  useEffect(() => {
+    const fetchColecciones = async () => {
+      try {
+        const respuesta = await fetch("http://localhost:8000/api/auth/obtener-colecciones/");
+        const data = await respuesta.json();
+        setColecciones(data);
+      } catch (error) {
+        console.error("Error al cargar las colecciones:", error);
+      }
+    };
+    fetchColecciones();
+  }, []);
+
+  const filteredProductos = sortedProductos.filter((producto) =>
     producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const destacado = filteredProductos.length > 0 ? filteredProductos[0] : null;
-  const otrosProductos = filteredProductos.length > 1 ? filteredProductos.slice(1) : filteredProductos;
+  const otrosProductos = filteredProductos.length > 0 ? filteredProductos : [];
 
-  // Ordenar productos
   const sortProductos = (type) => {
     let sorted = [...filteredProductos];
     if (type === "priceAsc") sorted.sort((a, b) => a.precio - b.precio);
@@ -42,42 +59,38 @@ function GridFunkos({ searchTerm }) {
     setSortedProductos(sorted);
   };
 
-  // Filtrar por colección
   const filterProductos = (collection) => {
     if (collection === "all") {
       setSortedProductos(productos);
     } else {
-      const filtrado = productos.filter((producto) => producto.idColeccion === collection);
+      const filtrado = productos.filter((producto) => String(producto.idColeccion) === String(collection));
       setSortedProductos(filtrado);
     }
     setFilterOption(collection);
   };
 
-  // Obtener colecciones únicas
-  const getUniqueCollections = () => {
-    const collections = productos.map((producto) => producto.idColeccion);
-    return ["all", ...new Set(collections)];
-  };
-
   return (
     <div className="grid-container">
-      {destacado && searchTerm === "" && filterOption === "all" && (
-        <div className="featured-funko">
-          <div className="featured-image">
-            <img src={destacado.imagen} alt={destacado.nombre} />
-          </div>
-          <div className="featured-description">
-            <h2>{destacado.nombre}</h2>
-            <p>{destacado.descripcion}</p>
-            <button 
-              className="btn-see-more" 
-              onClick={() => navigate(`/user/funko/${destacado.idProducto}`)} // Redirige al detalle del Funko
-            >
-              Ver más
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Carrusel de imágenes promocionales */}
+      <Swiper
+        spaceBetween={30}
+        centeredSlides={true}
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
+        pagination={{ clickable: true }}
+        navigation={true}
+        modules={[Autoplay, Pagination, Navigation]}
+        className="swiper-container"
+      >
+        <SwiperSlide>
+          <img src={banner} alt="Promoción 1" className="banner-image" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img src="/images/banner2.jpg" alt="Promoción 2" className="banner-image" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img src="/images/banner3.jpg" alt="Promoción 3" className="banner-image" />
+        </SwiperSlide>
+      </Swiper>
 
       <div className="nuestros-prod">
         <p>Nuestros productos</p>
@@ -90,9 +103,10 @@ function GridFunkos({ searchTerm }) {
         <button onClick={() => sortProductos("priceAsc")}>Menor Precio</button>
         <button onClick={() => sortProductos("priceDesc")}>Mayor Precio</button>
         <select onChange={(e) => filterProductos(e.target.value)} value={filterOption}>
-          {getUniqueCollections().map((col, index) => (
-            <option key={index} value={col}>
-              {col === "all" ? "Todas las Colecciones" : col}
+          <option value="all">Todas las Colecciones</option>
+          {colecciones.map((col) => (
+            <option key={col.idColeccion} value={col.idColeccion}>
+              {col.nombre}
             </option>
           ))}
         </select>

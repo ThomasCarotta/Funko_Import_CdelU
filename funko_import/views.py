@@ -879,10 +879,18 @@ def payment_success(request):
             total = data.get("total")
             items = data.get("items", [])
 
+            print(f"Procesando pago con payment_id: {payment_id}")  # Verificación
+
             if not payment_id or not userEmail or not total or not items:
                 return JsonResponse({"error": "Datos incompletos"}, status=400)
 
-            # Verificar el pago con Mercado Pago
+            # Evitar duplicados verificando antes de realizar la venta
+            if Venta.objects.filter(payment_id=payment_id).exists():
+                print(f"⚠️ Pago duplicado detectado: {payment_id}")
+                return JsonResponse({"error": "Venta ya registrada"}, status=400)
+
+
+            # Verificar el pago en Mercado Pago
             headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
             mp_response = requests.get(f"https://api.mercadopago.com/v1/payments/{payment_id}", headers=headers)
 
@@ -894,27 +902,18 @@ def payment_success(request):
             if mp_data.get("status") != "approved":
                 return JsonResponse({"error": "Pago no aprobado"}, status=400)
 
-            # ✅ 2. Buscar usuario por correo
             user = Usuario.objects.filter(correo=userEmail).first()
             if not user:
                 return JsonResponse({"error": "Usuario no encontrado"}, status=404)
 
-            # ✅ 3. Registrar la venta
-            venta = Venta.objects.create(
-                usuario=user,
-                total=total,
-                payment_id=payment_id,  # Ahora puedes usar payment_id
-                estado='pagado'  # Establecer el estado como 'pagado'
-            )
+            venta = Venta.objects.create(usuario=user, total=total, payment_id=payment_id, estado='pagado')
 
-            # ✅ 4. Registrar los detalles de la venta
             for item in items:
                 producto = Producto.objects.filter(idProducto=item["idProducto"]).first()
                 if producto and producto.cantidadDisp >= item["quantity"]:
                     producto.cantidadDisp -= item["quantity"]
                     producto.save()
 
-                    # Crear el detalle de la venta
                     DetalleVenta.objects.create(
                         venta=venta,
                         producto=producto,
@@ -923,19 +922,26 @@ def payment_success(request):
                         total=item["unit_price"] * item["quantity"]
                     )
                 else:
-                    # Revertir la venta si no hay suficiente stock
                     venta.delete()
                     return JsonResponse({"error": f"Stock insuficiente para {producto.nombre}"}, status=400)
+
+            # ✅ Limpiar el carrito automáticamente después de la compra
+            carrito_usuario = carrito.objects.filter(idUsuario=user).first()
+            if carrito_usuario:
+                ProductoCarrito.objects.filter(id_carrito=carrito_usuario).delete()
+                carrito_usuario.total = 0
+                carrito_usuario.save()
 
             return JsonResponse({"message": "Compra registrada con éxito"})
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Formato JSON inválido"}, status=400)
         except Exception as e:
-            print("Error en payment_success:", str(e))  # Depuración
+            print("Error en payment_success:", str(e))
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
 
 from django.db.models import Sum
 
@@ -1048,4 +1054,24 @@ def actualizar_estado_venta(request, venta_id):
         return Response({"message": "Estado de la venta actualizado", "codigo_seguimiento": venta.codigo_seguimiento})
     except Venta.DoesNotExist:
         return Response({"error": "Venta no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['DELETE'])
+def limpiar_carrito(request):
+    user_email = request.headers.get('userEmail')
+    if not user_email:
+        return Response({"error": "Falta el correo del usuario"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        usuario = Usuario.objects.get(correo=user_email)
+        carrito_usuario = carrito.objects.get(idUsuario=usuario)
+        ProductoCarrito.objects.filter(id_carrito=carrito_usuario).delete()
+        carrito_usuario.total = 0
+        carrito_usuario.save()
+        return Response({"message": "Carrito limpiado correctamente"}, status=status.HTTP_200_OK)
+    except Usuario.DoesNotExist:
+        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except carrito.DoesNotExist:
+        return Response({"error": "Carrito no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

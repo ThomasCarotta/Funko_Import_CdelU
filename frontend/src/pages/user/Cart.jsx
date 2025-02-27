@@ -12,10 +12,12 @@ const Cart = () => {
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [paymentProcessed, setPaymentProcessed] = useState(false); // Bandera para evitar múltiples ejecuciones
   const navigate = useNavigate();
 
   const userEmail = localStorage.getItem("userEmail");
 
+  // Función para obtener el carrito desde el backend
   const fetchCart = async () => {
     try {
       if (!userEmail) {
@@ -55,16 +57,24 @@ const Cart = () => {
     }
   };
 
+  // Cargar el carrito al montar el componente
   useEffect(() => {
     fetchCart();
   }, [userEmail]);
 
+  // Verificar el estado del pago al cargar el componente
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status'); // Mercado Pago envía el estado del pago como parámetro en la URL
-
-    if (status === 'success') {
-      // Obtener los datos del carrito desde el estado
+    const status = urlParams.get('status');
+  
+    if (status === 'success' && !paymentProcessed) {
+      setPaymentProcessed(true);  // Evita múltiples ejecuciones
+      
+      if (sessionStorage.getItem('paymentProcessed')) {
+        return;
+      }
+      sessionStorage.setItem('paymentProcessed', 'true');
+  
       if (!cart.length || !userEmail) {
         Swal.fire({
           title: "No se encontraron datos de la compra",
@@ -73,20 +83,14 @@ const Cart = () => {
         });
         return;
       }
-
-      // Calcular el total del carrito
+  
       const total = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
-
-      // Hacer una solicitud POST a payment_success para registrar la compra
+  
       fetch("http://127.0.0.1:8000/api/auth/payment-success/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          payer: {
-            email: userEmail,
-          },
+          payer: { email: userEmail },
           total: total,
           items: cart.map(item => ({
             idProducto: item.idProducto,
@@ -98,43 +102,37 @@ const Cart = () => {
       .then(response => response.json())
       .then(data => {
         if (data.message === "Compra registrada con éxito") {
-          Swal.fire({
-            title: "Compra registrada con éxito",
-            icon: "success",
-            confirmButtonText: "OK"
-          });
-          // Limpiar el carrito
+          Swal.fire({ title: "Compra registrada con éxito", icon: "success", confirmButtonText: "OK" });
           setCart([]);
-          // Redirigir al usuario a la página de inicio
+          localStorage.removeItem('cart');
+  
+          fetch("http://localhost:8000/api/auth/limpiar-carrito/", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json", "userEmail": userEmail },
+          });
+  
           navigate("/");
         } else {
-          Swal.fire({
-            title: "Error al registrar la compra",
-            text: data.error,
-            icon: "error",
-            confirmButtonText: "OK"
-          });
+          Swal.fire({ title: "Error al registrar la compra", text: data.error, icon: "error", confirmButtonText: "OK" });
         }
       })
       .catch(error => {
         console.error("Error al registrar la compra:", error);
-        Swal.fire({
-          title: "Error al registrar la compra",
-          text: error.message,
-          icon: "error",
-          confirmButtonText: "OK"
-        });
+        Swal.fire({ title: "Error al registrar la compra", text: error.message, icon: "error", confirmButtonText: "OK" });
       });
     }
   }, [cart, userEmail, navigate]);
+  
 
+  // Función para calcular el total del carrito
   const calcularTotal = (cart) => {
     const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
     const envio = 50; // Envío fijo de $50
     const totalConEnvio = subtotal + envio;
     setTotal(totalConEnvio.toFixed(2));
-};
+  };
 
+  // Función para eliminar un producto del carrito
   const removeProduct = async (idProducto) => {
     if (!userEmail) {
       console.error("Error: userEmail no está definido");
@@ -176,6 +174,7 @@ const Cart = () => {
     }
   };
 
+  // Función para actualizar la cantidad de un producto en el carrito
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) return;
 
@@ -187,6 +186,7 @@ const Cart = () => {
     calcularTotal(updatedCart);
   };
 
+  // Función para aplicar un descuento
   const applyDiscount = async () => {
     if (!discountCode) {
       Swal.fire({
@@ -196,7 +196,7 @@ const Cart = () => {
       });
       return;
     }
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/auth/aplicar-descuento/", {
         method: "POST",
@@ -208,20 +208,20 @@ const Cart = () => {
           userEmail: userEmail,
         }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Error al aplicar descuento");
       }
-  
+
       setDiscountApplied(true);
       setDiscountAmount(parseFloat(data.descuento));
-  
+
       // Calcular el subtotal sin el envío
       const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
       const descuentoAplicado = subtotal * (parseFloat(data.descuento) / 100);
       const totalConDescuento = (subtotal - descuentoAplicado) + 50; // Aplicar descuento solo al subtotal y luego sumar el envío
-  
+
       setTotal(totalConDescuento.toFixed(2));  // Aquí se actualiza el total con el descuento aplicado
       Swal.fire({
         title: "Descuento aplicado correctamente",
@@ -240,83 +240,89 @@ const Cart = () => {
     }
   };
 
+  // Función para procesar el pago
   const handleCheckout = async () => {
+    const checkoutButton = document.getElementById('checkout-button');
+    checkoutButton.disabled = true;  // Deshabilitar el botón
+
     try {
-        if (cart.length === 0) {
-          Swal.fire({
-            title: "Tu carrito está vacío",
-            icon: "warning",
-            confirmButtonText: "OK"
-          });
-            return;
-        }
-
-        // Validar datos antes de enviar
-        if (!total || !userEmail) {
-          Swal.fire({
-            title: "Faltan datos requeridos para procesar el pago",
-            icon: "error",
-            confirmButtonText: "OK"
-          });
-            return;
-        }
-
-        // Calcular el subtotal sin el envío
-        const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
-
-        // Calcular el descuento aplicado
-        const descuentoAplicado = subtotal * (discountAmount / 100);
-
-        // Calcular el total con envío y descuento
-        const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
-
-        const requestBody = {
-            total: totalConDescuentoYEnvio.toFixed(2),
-            items: cart.map(item => ({
-                idProducto: item.idProducto,
-                title: item.nombre,
-                quantity: item.quantity,
-                unit_price: item.precio,
-            })),
-            payer: {
-                email: userEmail,
-            },
-        };
-
-        console.log("Datos enviados al backend:", requestBody); // Depuración
-
-        const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Error al crear preferencia de pago");
-        }
-
-        const data = await response.json();
-        if (data.preferenceId) {
-            // Guardar el carrito en localStorage antes de redirigir
-            localStorage.setItem('cart', JSON.stringify(cart));
-            // Redirigir a Mercado Pago
-            window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
-        } else {
-            throw new Error("No se recibió un ID de preferencia válido");
-        }
-    } catch (error) {
-        console.error("Error al procesar el pago:", error.message);
+      if (cart.length === 0) {
         Swal.fire({
-          title: "Error al procesar el pago",
-          text: error.message,
+          title: "Tu carrito está vacío",
+          icon: "warning",
+          confirmButtonText: "OK"
+        });
+        return;
+      }
+
+      // Validar datos antes de enviar
+      if (!total || !userEmail) {
+        Swal.fire({
+          title: "Faltan datos requeridos para procesar el pago",
           icon: "error",
           confirmButtonText: "OK"
         });
+        return;
+      }
+
+      // Calcular el subtotal sin el envío
+      const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
+
+      // Calcular el descuento aplicado
+      const descuentoAplicado = subtotal * (discountAmount / 100);
+
+      // Calcular el total con envío y descuento
+      const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
+
+      const requestBody = {
+        total: totalConDescuentoYEnvio.toFixed(2),
+        items: cart.map(item => ({
+          idProducto: item.idProducto,
+          title: item.nombre,
+          quantity: item.quantity,
+          unit_price: item.precio,
+        })),
+        payer: {
+          email: userEmail,
+        },
+      };
+
+      console.log("Datos enviados al backend:", requestBody); // Depuración
+
+      const response = await fetch("http://localhost:8000/api/auth/create-payment-preference/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al crear preferencia de pago");
+      }
+
+      const data = await response.json();
+      if (data.preferenceId) {
+        // Guardar el carrito en localStorage antes de redirigir
+        localStorage.setItem('cart', JSON.stringify(cart));
+        // Redirigir a Mercado Pago
+        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
+      } else {
+        throw new Error("No se recibió un ID de preferencia válido");
+      }
+    } catch (error) {
+      console.error("Error al procesar el pago:", error.message);
+      Swal.fire({
+        title: "Error al procesar el pago",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK"
+      });
+    } finally {
+      checkoutButton.disabled = false;  // Rehabilitar el botón en caso de error
     }
-};
+  };
 
   if (loading) return <p>Cargando carrito...</p>;
 
@@ -363,26 +369,26 @@ const Cart = () => {
               </div>
             ))}
 
-              <div className="cart-summary">
-                <div className="summary-row">
-                  <span>Subtotal</span>
-                  <span>${cart.reduce((acc, item) => acc + item.precio * item.quantity, 0).toFixed(2)}</span>  {/* Subtotal sin descuento */}
-                </div>
-                <div className="summary-row">
-                  <span>Envío</span>
-                  <span>$50.00</span>
-                </div>
-                {discountApplied && (
-                  <div className="summary-row">
-                    <span>Descuento</span>
-                    <span>-{discountAmount}%</span>
-                  </div>
-                )}
-                <div className="summary-row total">
-                  <span>Total</span>
-                  <span>${total}</span>  {/* Total final con envío y descuento aplicado */}
-                </div>
+            <div className="cart-summary">
+              <div className="summary-row">
+                <span>Subtotal</span>
+                <span>${cart.reduce((acc, item) => acc + item.precio * item.quantity, 0).toFixed(2)}</span>
               </div>
+              <div className="summary-row">
+                <span>Envío</span>
+                <span>$50.00</span>
+              </div>
+              {discountApplied && (
+                <div className="summary-row">
+                  <span>Descuento</span>
+                  <span>-{discountAmount}%</span>
+                </div>
+              )}
+              <div className="summary-row total">
+                <span>Total</span>
+                <span>${total}</span>
+              </div>
+            </div>
 
             <div className="discount-section">
               <input
@@ -400,7 +406,7 @@ const Cart = () => {
               <button onClick={() => navigate("/")} className="cancel-btn">
                 Cancelar
               </button>
-              <button onClick={handleCheckout} className="checkout-btn">
+              <button id="checkout-button" onClick={handleCheckout} className="checkout-btn">
                 Pagar con Mercado Pago
               </button>
             </div>

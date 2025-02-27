@@ -12,7 +12,7 @@ import Productos from "./pages/admin/Productos";
 import Categorias from "./pages/admin/Categorias";
 import Pedidos from "./pages/admin/Pedidos";
 import Edicion from "./pages/admin/Edicion";
-import Perfil from "./pages/admin/AdPerfil";
+// import Perfil from "./pages/admin/AdPerfil";
 import Descuentos from "./pages/admin/Descuentos";
 import Promociones from "./pages/admin/Promociones";
 import VentasAdmin from "./pages/admin/VentasAdmin";
@@ -50,7 +50,7 @@ function App() {
           <Route path="categorias" element={<Categorias />} />
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="edicion" element={<Edicion />} />
-          <Route path="perfil" element={<Perfil />} />
+          {/* <Route path="perfil" element={<Perfil />} /> */}
           <Route path="descuento" element={<Descuentos />} />
           <Route path="promocion" element={<Promociones />} />
           <Route path="*" element={<Navigate to="/admin" />} />
