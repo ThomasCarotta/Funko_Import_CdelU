@@ -868,6 +868,8 @@ def create_payment_preference(request):
 
 import requests  # Asegúrate de importar la librería
 
+from django.db import transaction
+
 @csrf_exempt
 def payment_success(request):
     if request.method == "POST":
@@ -876,69 +878,70 @@ def payment_success(request):
             payment_id = data.get("payment_id")
             userEmail = data.get("payer", {}).get("email")
             total = data.get("total")
-            descuento = data.get("descuento", 0)  # Obtener el descuento (por defecto 0 si no está presente)
+            descuento = data.get("descuento", 0)
             items = data.get("items", [])
 
-            print(f"Procesando pago con payment_id: {payment_id}")  # Verificación
+            print(f"Procesando pago con payment_id: {payment_id}")  
 
             if not payment_id or not userEmail or not total or not items:
                 return JsonResponse({"error": "Datos incompletos"}, status=400)
 
-            # Evitar duplicados verificando antes de realizar la venta
-            if Venta.objects.filter(payment_id=payment_id).exists():
-                print(f"Pago duplicado detectado: {payment_id}")
-                return JsonResponse({"error": "Venta ya registrada"}, status=400)
+            # Bloqueo de transacción para evitar duplicados
+            with transaction.atomic():
+                if Venta.objects.filter(payment_id=payment_id).exists():
+                    print(f"Pago duplicado detectado: {payment_id}")
+                    return JsonResponse({"error": "Venta ya registrada"}, status=400)
 
-            # Verificar el pago en Mercado Pago
-            headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-            mp_response = requests.get(f"https://api.mercadopago.com/v1/payments/{payment_id}", headers=headers)
+                # Verificar el pago en Mercado Pago
+                headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+                mp_response = requests.get(f"https://api.mercadopago.com/v1/payments/{payment_id}", headers=headers)
 
-            if mp_response.status_code != 200:
-                return JsonResponse({"error": "Error al verificar el pago con Mercado Pago"}, status=400)
+                if mp_response.status_code != 200:
+                    return JsonResponse({"error": "Error al verificar el pago con Mercado Pago"}, status=400)
 
-            mp_data = mp_response.json()
+                mp_data = mp_response.json()
 
-            if mp_data.get("status") != "approved":
-                return JsonResponse({"error": "Pago no aprobado"}, status=400)
+                if mp_data.get("status") != "approved":
+                    return JsonResponse({"error": "Pago no aprobado"}, status=400)
 
-            user = Usuario.objects.filter(correo=userEmail).first()
-            if not user:
-                return JsonResponse({"error": "Usuario no encontrado"}, status=404)
+                user = Usuario.objects.filter(correo=userEmail).first()
+                if not user:
+                    return JsonResponse({"error": "Usuario no encontrado"}, status=404)
 
-            # Crear la venta con el descuento
-            venta = Venta.objects.create(
-                usuario=user,
-                total=total,
-                descuento=descuento,  # Guardar el descuento
-                payment_id=payment_id,
-                estado='pagado'
-            )
+                # Crear la venta dentro del bloqueo
+                venta = Venta.objects.create(
+                    usuario=user,
+                    total=total,
+                    descuento=descuento,
+                    payment_id=payment_id,
+                    estado='pagado'
+                )
 
-            for item in items:
-                producto = Producto.objects.filter(idProducto=item["idProducto"]).first()
-                if producto and producto.cantidadDisp >= item["quantity"]:
-                    producto.cantidadDisp -= item["quantity"]
-                    producto.save()
+                for item in items:
+                    producto = Producto.objects.filter(idProducto=item["idProducto"]).first()
+                    if producto and producto.cantidadDisp >= item["quantity"]:
+                        producto.cantidadDisp -= item["quantity"]
+                        producto.save()
 
-                    DetalleVenta.objects.create(
-                        venta=venta,
-                        producto=producto,
-                        cantidad=item["quantity"],
-                        precio_unitario=item["unit_price"],
-                        total=item["unit_price"] * item["quantity"]
-                    )
-                else:
-                    venta.delete()
-                    return JsonResponse({"error": f"Stock insuficiente para {producto.nombre}"}, status=400)
+                        DetalleVenta.objects.create(
+                            venta=venta,
+                            producto=producto,
+                            cantidad=item["quantity"],
+                            precio_unitario=item["unit_price"],
+                            total=item["unit_price"] * item["quantity"]
+                        )
+                    else:
+                        venta.delete()
+                        return JsonResponse({"error": f"Stock insuficiente para {producto.nombre}"}, status=400)
 
-            # ✅ Limpiar el carrito automáticamente después de la compra
-            carrito_usuario = carrito.objects.filter(idUsuario=user).first()
-            if carrito_usuario:
-                ProductoCarrito.objects.filter(id_carrito=carrito_usuario).delete()
-                carrito_usuario.total = 0
-                carrito_usuario.save()
+                # Limpiar el carrito automáticamente
+                carrito_usuario = carrito.objects.filter(idUsuario=user).first()
+                if carrito_usuario:
+                    ProductoCarrito.objects.filter(id_carrito=carrito_usuario).delete()
+                    carrito_usuario.total = 0
+                    carrito_usuario.save()
 
-            return JsonResponse({"message": "Compra registrada con éxito"})
+                return JsonResponse({"message": "Compra registrada con éxito"})
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Formato JSON inválido"}, status=400)
@@ -947,6 +950,7 @@ def payment_success(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
 
 
 from django.db.models import Sum
