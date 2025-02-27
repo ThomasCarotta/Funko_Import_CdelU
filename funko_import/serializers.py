@@ -16,7 +16,7 @@ class ColeccionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Coleccion
-        fields = ['idColeccion', 'nombre', 'cantidad']
+        fields = '__all__'
 
     def get_cantidad(self, obj):
         return obj.cantidad 
