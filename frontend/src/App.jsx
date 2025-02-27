@@ -67,9 +67,7 @@ function App() {
             <Route path="favorites" element={<Favorites />} />
           </Route>
           <Route path="perfil" element={<PerfilUser />} />
-          <Route path="shipping" element={<ShippingMethod />} />
-          <Route path="payment" element={<PaymentMethod />} />
-          <Route path="payment-status" element={<PaymentStatus />} />
+          {/* <Route path="shipping" element={<ShippingMethod />} /> */}
           <Route path="detalle/:idProducto" element={<DetalleFunko />} />
           <Route path="MisCompras" element={<MisCompras />} />
 

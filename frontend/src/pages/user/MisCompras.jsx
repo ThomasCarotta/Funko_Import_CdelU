@@ -47,7 +47,7 @@ const MisCompras = () => {
         <ul>
           {ventas.map((venta) => (
             <li key={venta.id} className="venta-card">
-                <h2>Venta ID: {venta.id}</h2>
+                <h2>Venta: {venta.id}</h2>
                 <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
                 <p>Total: ${venta.total}</p>
                 <p>Descuento: % -{venta.descuento * 100}</p>

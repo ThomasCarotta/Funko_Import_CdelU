@@ -116,7 +116,7 @@ const PerfilUser = () => {
   return (
     <div className="perfil-containerUSER">
       <header className="header-profileUSER">
-        <button className="btn-backUSER" onClick={() => navigate('/user')}>Volver</button>
+        {/* <button className="btn-backUSER" onClick={() => navigate('/user')}>Volver</button> */}
         <h1 className="text-centerMPUSER text-2xl font-semibold mb-6">Mi Perfil</h1>
       </header>
       
@@ -234,6 +234,7 @@ const PerfilUser = () => {
           </div>
         )}
       </div>
+      <button className="btn-backUSER" onClick={() => navigate('/user')}>Volver</button>
     </div>
   );
 };

@@ -736,7 +736,7 @@ def crear_pregunta(request):
         try:
             data = json.loads(request.body)
             pregunta_texto = data.get("pregunta")
-            id_producto = data.get("id_producto")
+            id_producto = data.get("idProducto")
             correo = data.get("correo")
 
             if not pregunta_texto or not id_producto or not correo:
