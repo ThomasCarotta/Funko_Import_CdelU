@@ -19,10 +19,8 @@ const PerfilUser = () => {
 
   // Obtener el token de autenticación y los datos del usuario al cargar el componente
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const email = localStorage.getItem('userEmail');
-  
-    console.log("Email desde localStorage:", email); // 🔍 Verifica qué email se está usando
+    const token = sessionStorage.getItem('user_token'); // Asegúrate de que la clave sea correcta
+    const email = sessionStorage.getItem('userEmail');
   
     if (!token || !email) {
       navigate('/login');
@@ -38,7 +36,6 @@ const PerfilUser = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("Datos recibidos del backend:", data); // 🔍 Verificar qué usuario se recibe
         if (data.user) {
           setUserData(data.user);
         } else {
@@ -49,10 +46,11 @@ const PerfilUser = () => {
         console.error('Error al obtener los datos del usuario:', error);
       });
   }, [navigate, isPersonalInfoEditing, isShippingInfoEditing]);
+  
 
   // Función para guardar los cambios en la información personal
   const handleSavePersonalInfo = () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
   
     fetch('http://localhost:8000/api/auth/update-profile/', {
       method: 'POST',
@@ -64,7 +62,7 @@ const PerfilUser = () => {
         nombre: userData.nombre,
         apellido: userData.apellido,
         telefono: userData.telefono,
-        correo: userData.correo,  // Asegurar que se usa el correo del estado y no localStorage
+        correo: userData.correo,  // Asegurar que se usa el correo del estado y no sessionStorage
       }),
     })
       .then((res) => res.json())
@@ -85,7 +83,7 @@ const PerfilUser = () => {
 
   // Función para guardar los cambios en la información de envío
   const handleSaveShippingInfo = () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     fetch('http://localhost:8000/api/auth/update-profile/', {
       method: 'POST',
@@ -94,7 +92,7 @@ const PerfilUser = () => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        correo: localStorage.getItem('userEmail'),
+        correo: sessionStorage.getItem('userEmail'),
         direccion: userData.direccion,
         // ciudad: userData.ciudad,
         // provincia: userData.provincia,
@@ -241,3 +239,4 @@ const PerfilUser = () => {
 };
 
 export default PerfilUser;
+

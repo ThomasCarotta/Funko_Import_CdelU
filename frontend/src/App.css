@@ -571,7 +571,7 @@ h1 {
   padding: 15px;
   /* border-radius: 6px; */
   background: #f9f9f9;
-  border-left: 5px solid #727272;
+  border-left: 5px solid #2d3748;
 }
 
 .section-titleUSER {
@@ -610,7 +610,7 @@ strong {
   font-size: 1rem;
   font-weight: bold;
   color: #fff;
-  background: #727272;
+  background: #2d3748;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -803,7 +803,7 @@ strong {
 }
 
 .apply-discount-btn {
-  background-color: #adb3ad;
+  background-color: #3c3cf5;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -890,6 +890,15 @@ button:hover {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.dropdown-menuUS {
+  position: absolute; /* O relative si quieres que se posicione dentro del contenedor */
+  top: 100%; /* Ajusta la posición según necesites */
+  left: 0;
+  right: 0;
+  background-color: white; /* O cualquier color que prefieras */
+  z-index: 1000; /* Asegúrate de que sea mayor que el carrusel */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Agrega sombra si lo deseas */
 }
 
 .dropdown-menuUS a,
@@ -1003,3 +1012,61 @@ button:hover {
   object-fit: cover;
   border-radius: 10px;
 }
+/* Estilos generales para el componente DetalleFunko */
+.detalle-funko {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Contenedor de la imagen y detalles del producto */
+.producto-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* Estilos para la imagen del producto */
+.producto-imagen {
+  flex: 1;
+}
+
+.producto-imagen img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los detalles del producto */
+.producto-detalles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.producto-detalles h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.producto-detalles p {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.producto-detalles button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.producto-detalles button:hover {
+  background-color: #0056b3;
+}
+

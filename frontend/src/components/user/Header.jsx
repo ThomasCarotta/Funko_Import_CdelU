@@ -8,17 +8,19 @@ const Header = ({ setSearchTerm }) => {
   const navigate = useNavigate();
   let timeoutId = null; // Variable para manejar el temporizador
 
-  const isUserLoggedIn = !!localStorage.getItem("user_token");
-  const userName = localStorage.getItem("userName");
+  const isUserLoggedIn = !!sessionStorage.getItem("user_token");
+  const userName = sessionStorage.getItem("userName");
+  ;
+
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userName");
+    sessionStorage.removeItem("user_token");
+    sessionStorage.removeItem("userEmail");
+    sessionStorage.removeItem("userName");
     navigate("/login");
   };
 

@@ -9,6 +9,7 @@ import "swiper/css/navigation";
 import "../../App.css";
 import { useNavigate } from "react-router-dom";
 import banner from "../../assets/banner.jpg";
+import banner2 from "../../assets/banner2.jpg";
 
 function GridFunkos({ searchTerm }) {
   const [productos, setProductos] = useState([]);
@@ -85,7 +86,7 @@ function GridFunkos({ searchTerm }) {
           <img src={banner} alt="Promoción 1" className="banner-image" />
         </SwiperSlide>
         <SwiperSlide>
-          <img src="/images/banner2.jpg" alt="Promoción 2" className="banner-image" />
+          <img src={banner2} alt="Promoción 2" className="banner2-image" />
         </SwiperSlide>
         <SwiperSlide>
           <img src="/images/banner3.jpg" alt="Promoción 3" className="banner-image" />

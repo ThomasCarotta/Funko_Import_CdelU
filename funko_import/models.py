@@ -377,7 +377,7 @@ class Venta(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ventas')
     fecha_venta = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    descuento = models.ForeignKey('Descuento', on_delete=models.SET_NULL, null=True, blank=True)
+    descuento = models.FloatField(null=True, blank=True)     
     estado = models.CharField(max_length=20, choices=[
         ('en_espera', 'En espera'),
         ('despachado', 'Despachado'),

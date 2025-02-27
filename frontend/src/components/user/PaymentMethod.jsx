@@ -17,7 +17,7 @@ const PaymentMethod = () => {
     setLoading(true);
     try {
       // Obtener el correo electrónico del usuario autenticado
-      const userEmail = localStorage.getItem("userEmail");
+      const userEmail = sessionStorage.getItem("userEmail");
 
       if (!userEmail) {
         throw new Error("Usuario no autenticado");

@@ -7,9 +7,9 @@ import '../../App.css';
 function Favorites() {
   const [favorites, setFavorites] = useState([]);
 
-  // Cargar favoritos desde localStorage al montar el componente
+  // Cargar favoritos desde sessionStorage al montar el componente
   useEffect(() => {
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    const storedFavorites = JSON.parse(sessionStorage.getItem('favorites')) || [];
     setFavorites(storedFavorites);
   }, []);
 

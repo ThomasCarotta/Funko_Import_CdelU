@@ -6,16 +6,16 @@ import logoImage from '../../assets/logo.png';
 const HeaderAdmin = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const isAdminLoggedIn = !!localStorage.getItem("admin_token");
+  const isAdminLoggedIn = !!sessionStorage.getItem("admin_token");
   const navigate = useNavigate();
   let menuTimeout, userTimeout;
 
   // Función para manejar el cierre de sesión
   const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_email");
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("userEmail");
+    sessionStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_email");
+    sessionStorage.removeItem("user_token");
+    sessionStorage.removeItem("userEmail");
     navigate("/login");
   };
 

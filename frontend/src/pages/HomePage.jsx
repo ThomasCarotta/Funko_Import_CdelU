@@ -7,7 +7,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       // Si ya hay sesión, ir directamente a la vista de usuario
       navigate("/user");

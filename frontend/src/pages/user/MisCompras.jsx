@@ -10,7 +10,7 @@ const MisCompras = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userEmail = localStorage.getItem("userEmail");
+    const userEmail = sessionStorage.getItem("userEmail");
     if (!userEmail) {
       navigate("/login");
       return;
@@ -50,7 +50,8 @@ const MisCompras = () => {
                 <h2>Venta ID: {venta.id}</h2>
                 <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
                 <p>Total: ${venta.total}</p>
-                <p>Descuento: $-{venta.descuento}</p>
+                <p>Descuento: % -{venta.descuento * 100}</p>
+                <p>Total: ${venta.total}</p>
                 {venta.codigo_seguimiento && (
                     <p>Código de seguimiento: <strong>{venta.codigo_seguimiento}</strong></p>
                 )}

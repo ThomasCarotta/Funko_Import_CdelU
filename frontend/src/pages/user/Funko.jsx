@@ -40,7 +40,7 @@ const Funko = () => {
       <div className="contenido">
         <DetalleFunko funko={funko} />
 
-        <div className="reseñas">
+        {/* <div className="reseñas">
           <h2>Reseñas y Comentarios</h2>
           {reseñas.length > 0 ? (
             reseñas.map((review) => (
@@ -63,7 +63,7 @@ const Funko = () => {
             />
             <button type="submit">Enviar</button>
           </form>
-        </div>
+        </div> */}
       </div>
 
       <Footer />

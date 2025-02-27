@@ -10,7 +10,7 @@ const VentasAdmin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userEmail = localStorage.getItem("userEmail");
+    const userEmail = sessionStorage.getItem("userEmail");
     if (!userEmail) {
       navigate("/login");
       return;

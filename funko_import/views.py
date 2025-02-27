@@ -876,6 +876,7 @@ def payment_success(request):
             payment_id = data.get("payment_id")
             userEmail = data.get("payer", {}).get("email")
             total = data.get("total")
+            descuento = data.get("descuento", 0)  # Obtener el descuento (por defecto 0 si no está presente)
             items = data.get("items", [])
 
             print(f"Procesando pago con payment_id: {payment_id}")  # Verificación
@@ -904,7 +905,14 @@ def payment_success(request):
             if not user:
                 return JsonResponse({"error": "Usuario no encontrado"}, status=404)
 
-            venta = Venta.objects.create(usuario=user, total=total, payment_id=payment_id, estado='pagado')
+            # Crear la venta con el descuento
+            venta = Venta.objects.create(
+                usuario=user,
+                total=total,
+                descuento=descuento,  # Guardar el descuento
+                payment_id=payment_id,
+                estado='pagado'
+            )
 
             for item in items:
                 producto = Producto.objects.filter(idProducto=item["idProducto"]).first()
@@ -979,6 +987,7 @@ def get_ventas(request):
             'fecha_venta': venta.fecha_venta,
             'total': venta.total,
             'productos': productos,
+            'descuento': venta.descuento,
             'codigo_seguimiento': venta.codigo_seguimiento
         })
 

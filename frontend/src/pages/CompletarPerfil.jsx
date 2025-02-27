@@ -17,8 +17,8 @@ const CompletarPerfil = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    const email = localStorage.getItem("email");
+    const token = sessionStorage.getItem("user_token");
+    const email = sessionStorage.getItem("userEmail");
 
     try {
       const res = await fetch("http://localhost:8000/api/auth/completar-perfil/", {
@@ -47,7 +47,7 @@ const CompletarPerfil = () => {
       // Verifica el mensaje de éxito
       if (data.message === "Perfil actualizado correctamente") {
         // Redirigir al usuario después de completar su perfil
-        localStorage.setItem("userName", formData.nombre);
+        sessionStorage.setItem("userName", formData.nombre);
         navigate("/user");
       } else {
         throw new Error("Error inesperado al completar el perfil");

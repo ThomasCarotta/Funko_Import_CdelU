@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 function DetalleFunko() {
   const { idProducto } = useParams(); // Obtener el ID desde la URL
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
+  const [userEmail, setUserEmail] = useState(sessionStorage.getItem("userEmail"));
   const [preguntas, setPreguntas] = useState([]);
   const [nuevaPregunta, setNuevaPregunta] = useState("");
   const [respuestaPregunta, setRespuestaPregunta] = useState({});
@@ -15,7 +17,7 @@ function DetalleFunko() {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const email = localStorage.getItem("userEmail");
+      const email = sessionStorage.getItem("userEmail");
       setUserEmail(email);
       console.log("Storage cambiado. Nuevo email:", email); // Depuración
     };
@@ -100,7 +102,11 @@ function DetalleFunko() {
   const handleSubmitResena = async (e) => {
     e.preventDefault();
     if (!userEmail) {
-      alert("Por favor, inicia sesión para hacer una reseña");
+      Swal.fire({
+        title: "Por favor, inicia sesión para hacer una reseña",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
       return;
     }
 
@@ -125,21 +131,38 @@ function DetalleFunko() {
       const data = await respuesta.json();
       setResenas([...resenas, data]);
       setNuevaResena({ resena: 5, comentario: "" });
-      alert("Reseña enviada correctamente");
+      Swal.fire({
+        title: "Reseña enviada correctamente",
+        icon: "success",
+        timer: 1500,
+      });
     } catch (error) {
       console.error("Error al enviar la reseña:", error);
-      alert("Error al enviar la reseña: " + error.message);
+      Swal.fire({
+        title: "Error al enviar la reseña",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
     }
   };
 
   const handleAddToCart = async () => {
     if (!userEmail) {
-      alert("Por favor, inicia sesión para añadir productos al carrito");
+      Swal.fire({
+        title: "Por favor, inicia sesión para añadir productos al carrito",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
       return;
     }
 
     if (producto.cantidadDisp <= 0) {
-      alert("No hay suficiente stock disponible para este producto.");
+      Swal.fire({
+        title: "No hay suficiente stock disponible para este producto.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
       return;
     }
 
@@ -158,20 +181,36 @@ function DetalleFunko() {
 
       const data = await respuesta.json();
       if (data.success) {
-        alert("Producto añadido al carrito");
+        Swal.fire({
+          title: "Producto añadido al carrito",
+          icon: "success",
+          timer: 1500,
+        });
       } else {
-        alert(data.message || "Error al añadir producto");
+        Swal.fire({
+          title: data.message || "Error al añadir producto",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       }
     } catch (error) {
       console.error("Error al añadir al carrito:", error);
-      alert("Hubo un problema al añadir el producto");
+      Swal.fire({
+        title: "Hubo un problema al añadir el producto",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
     }
   };
 
   const handleSubmitPregunta = async (e) => {
     e.preventDefault();
     if (!userEmail) {
-      alert("Por favor, inicia sesión para hacer una pregunta");
+      Swal.fire({
+        title: "Por favor, inicia sesión para hacer una pregunta",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
       return;
     }
 
@@ -192,9 +231,17 @@ function DetalleFunko() {
         const data = await respuesta.json();
         setPreguntas([...preguntas, data.pregunta]);
         setNuevaPregunta("");
-        alert("Pregunta enviada correctamente");
+        Swal.fire({
+          title: "Pregunta enviada correctamente",
+          icon: "success",
+          timer: 1500,
+        });
       } else {
-        alert("Error al enviar la pregunta");
+        Swal.fire({
+          title: "Error al enviar la pregunta",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       }
     } catch (error) {
       console.error("Error al enviar la pregunta:", error);
@@ -204,7 +251,11 @@ function DetalleFunko() {
   const handleResponderPregunta = async (idPregunta) => {
     const respuesta = respuestaPregunta[idPregunta];
     if (!respuesta) {
-      alert("Por favor, escribe una respuesta");
+      Swal.fire({
+        title: "Por favor, escribe una respuesta",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
       return;
     }
 
@@ -223,9 +274,17 @@ function DetalleFunko() {
         const data = await respuestaApi.json();
         setPreguntas(preguntas.map(p => p.id_pregunta === idPregunta ? data.pregunta : p));
         setRespuestaPregunta({ ...respuestaPregunta, [idPregunta]: "" });
-        alert("Respuesta enviada correctamente");
+        Swal.fire({
+          title: "Respuesta enviada correctamente",
+          icon: "success",
+          timer: 1500,
+        });
       } else {
-        alert("Error al enviar la respuesta");
+        Swal.fire({
+          title: "Error al enviar la respuesta",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       }
     } catch (error) {
       console.error("Error al enviar la respuesta:", error);
@@ -238,34 +297,40 @@ function DetalleFunko() {
 
   return (
     <div className="detalle-funko">
-      <img
-        src={`http://localhost:8000${producto.imagen}`}
-        alt={producto.nombre}
-        onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
-      />
-      <h2>{producto.nombre}</h2>
-      <p>{producto.descripcion}</p>
-      <p>
-        Precio:{" "}
-        {producto.precio_con_descuento && producto.porcentaje_descuento ? (
-          <>
-            <span style={{ textDecoration: "line-through", color: "red" }}>
-              {producto.precio} USD
-            </span>{" "}
-            <strong>{producto.precio_con_descuento} USD</strong>
-          </>
-        ) : (
-          <strong>{producto.precio} USD</strong>
-        )}
-      </p>
-      {producto.porcentaje_descuento && (
-        <div className="descuento-banner">
-          ¡{producto.porcentaje_descuento}% de descuento!
+      <div className="producto-container">
+        <div className="producto-imagen">
+          <img
+            src={`http://localhost:8000${producto.imagen}`}
+            alt={producto.nombre}
+            onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
+          />
         </div>
-      )}
-      <p>Cantidad disponible: {producto.cantidadDisp}</p>
-      <p>{producto.esEspecial ? "Edición especial" : "Edición estándar"}</p>
-      <button onClick={handleAddToCart}>Añadir al carrito</button>
+        <div className="producto-detalles">
+          <h2>{producto.nombre}</h2>
+          <p>{producto.descripcion}</p>
+          <p>
+            Precio:{" "}
+            {producto.precio_con_descuento && producto.porcentaje_descuento ? (
+              <>
+                <span style={{ textDecoration: "line-through", color: "red" }}>
+                  {producto.precio} USD
+                </span>{" "}
+                <strong>{producto.precio_con_descuento} USD</strong>
+              </>
+            ) : (
+              <strong>{producto.precio} USD</strong>
+            )}
+          </p>
+          {producto.porcentaje_descuento && (
+            <div className="descuento-banner">
+              ¡{producto.porcentaje_descuento}% de descuento!
+            </div>
+          )}
+          <p>Cantidad disponible: {producto.cantidadDisp}</p>
+          <p>{producto.esEspecial ? "Edición especial" : "Edición estándar"}</p>
+          <button onClick={handleAddToCart}>Añadir al carrito</button>
+        </div>
+      </div>
 
       {/* Sección de preguntas y respuestas (existente) */}
       <div className="preguntas-respuestas" style={{ marginTop: "20px", borderTop: "1px solid #ccc", paddingTop: "20px" }}>

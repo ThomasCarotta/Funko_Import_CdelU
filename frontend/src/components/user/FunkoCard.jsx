@@ -7,7 +7,7 @@ function FunkoCard({ producto }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    const favorites = JSON.parse(sessionStorage.getItem("favorites")) || [];
     if (favorites.some((p) => p.idProducto === producto.idProducto)) {
       setIsFavorite(true);
     }
@@ -15,7 +15,7 @@ function FunkoCard({ producto }) {
 
   const toggleFavorite = (e) => {
     e.stopPropagation();
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    let favorites = JSON.parse(sessionStorage.getItem("favorites")) || [];
 
     if (isFavorite) {
       favorites = favorites.filter((p) => p.idProducto !== producto.idProducto);
@@ -23,7 +23,7 @@ function FunkoCard({ producto }) {
       favorites.push(producto);
     }
 
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+    sessionStorage.setItem("favorites", JSON.stringify(favorites));
     setIsFavorite(!isFavorite);
   };
 

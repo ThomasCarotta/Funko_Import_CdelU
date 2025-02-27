@@ -12,10 +12,9 @@ const Cart = () => {
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [paymentProcessed, setPaymentProcessed] = useState(false); // Bandera para evitar múltiples ejecuciones
   const navigate = useNavigate();
 
-  const userEmail = localStorage.getItem("userEmail");
+  const userEmail = sessionStorage.getItem("userEmail");
 
   // Función para obtener el carrito desde el backend
   const fetchCart = async () => {
@@ -61,68 +60,6 @@ const Cart = () => {
   useEffect(() => {
     fetchCart();
   }, [userEmail]);
-
-  // Verificar el estado del pago al cargar el componente
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-  
-    if (status === 'success' && !paymentProcessed) {
-      setPaymentProcessed(true);  // Evita múltiples ejecuciones
-      
-      if (sessionStorage.getItem('paymentProcessed')) {
-        return;
-      }
-      sessionStorage.setItem('paymentProcessed', 'true');
-  
-      if (!cart.length || !userEmail) {
-        Swal.fire({
-          title: "No se encontraron datos de la compra",
-          icon: "error",
-          confirmButtonText: "OK"
-        });
-        return;
-      }
-  
-      const total = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
-  
-      fetch("http://127.0.0.1:8000/api/auth/payment-success/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          payer: { email: userEmail },
-          total: total,
-          items: cart.map(item => ({
-            idProducto: item.idProducto,
-            quantity: item.quantity,
-            unit_price: item.precio,
-          })),
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message === "Compra registrada con éxito") {
-          Swal.fire({ title: "Compra registrada con éxito", icon: "success", confirmButtonText: "OK" });
-          setCart([]);
-          localStorage.removeItem('cart');
-  
-          fetch("http://localhost:8000/api/auth/limpiar-carrito/", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json", "userEmail": userEmail },
-          });
-  
-          navigate("/");
-        } else {
-          Swal.fire({ title: "Error al registrar la compra", text: data.error, icon: "error", confirmButtonText: "OK" });
-        }
-      })
-      .catch(error => {
-        console.error("Error al registrar la compra:", error);
-        Swal.fire({ title: "Error al registrar la compra", text: error.message, icon: "error", confirmButtonText: "OK" });
-      });
-    }
-  }, [userEmail, navigate]);
-  
 
   // Función para calcular el total del carrito
   const calcularTotal = (cart) => {
@@ -174,7 +111,6 @@ const Cart = () => {
     }
   };
 
-  // Función para actualizar la cantidad de un producto en el carrito
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) return;
 
@@ -186,7 +122,6 @@ const Cart = () => {
     calcularTotal(updatedCart);
   };
 
-  // Función para aplicar un descuento
   const applyDiscount = async () => {
     if (!discountCode) {
       Swal.fire({
@@ -319,8 +254,9 @@ const Cart = () => {
 
       const data = await response.json();
       if (data.preferenceId) {
-        // Guardar el carrito en localStorage antes de redirigir
-        localStorage.setItem('cart', JSON.stringify(cart));
+        // Guardar el carrito y el descuento en sessionStorage antes de redirigir
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        sessionStorage.setItem('discountAmount', discountAmount); // Guardar el descuento
         // Redirigir a Mercado Pago
         window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${data.preferenceId}`;
       } else {

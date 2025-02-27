@@ -197,7 +197,7 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-ACCESS_TOKEN = "Access-Token"
+ACCESS_TOKEN = "TEST-7963503306787610-022219-638cf8e5fd5410faf1b4a7d5bf6d8feb-671791668"
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
