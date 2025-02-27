@@ -50,6 +50,7 @@ const MisCompras = () => {
                 <h2>Venta ID: {venta.id}</h2>
                 <p>Fecha de compra: {new Date(venta.fecha_venta).toLocaleDateString()}</p>
                 <p>Total: ${venta.total}</p>
+                <p>Descuento: $-{venta.descuento}</p>
                 {venta.codigo_seguimiento && (
                     <p>Código de seguimiento: <strong>{venta.codigo_seguimiento}</strong></p>
                 )}

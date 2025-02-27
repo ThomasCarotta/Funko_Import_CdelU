@@ -121,7 +121,7 @@ const Cart = () => {
         Swal.fire({ title: "Error al registrar la compra", text: error.message, icon: "error", confirmButtonText: "OK" });
       });
     }
-  }, [cart, userEmail, navigate]);
+  }, [userEmail, navigate]);
   
 
   // Función para calcular el total del carrito
@@ -267,24 +267,39 @@ const Cart = () => {
 
       // Calcular el subtotal sin el envío
       const subtotal = cart.reduce((acc, item) => acc + item.precio * item.quantity, 0);
-
       // Calcular el descuento aplicado
-      const descuentoAplicado = subtotal * (discountAmount / 100);
-
+      const descuentoAplicado = subtotal * (parseFloat(discountAmount) / 100);
       // Calcular el total con envío y descuento
       const totalConDescuentoYEnvio = (subtotal - descuentoAplicado) + 50;
 
+      const items = cart.map(item => ({
+        idProducto: item.idProducto,
+        title: item.nombre,
+        quantity: item.quantity,
+        unit_price: item.precio,
+      }));
+      
+      // Descuento como un ítem negativo
+      if (descuentoAplicado > 0) {
+        items.push({
+          idProducto: "descuento",
+          title: "Descuento aplicado",
+          quantity: 1,
+          unit_price: -descuentoAplicado, // Valor negativo para restar
+        });
+      }
+      
+      // Envío como un ítem adicional
+      items.push({
+        idProducto: "envio",
+        title: "Costo de envío",
+        quantity: 1,
+        unit_price: 50, // Precio fijo del envío
+      });
+      
       const requestBody = {
-        total: totalConDescuentoYEnvio.toFixed(2),
-        items: cart.map(item => ({
-          idProducto: item.idProducto,
-          title: item.nombre,
-          quantity: item.quantity,
-          unit_price: item.precio,
-        })),
-        payer: {
-          email: userEmail,
-        },
+        items: items,
+        payer: { email: userEmail },
       };
 
       console.log("Datos enviados al backend:", requestBody); // Depuración

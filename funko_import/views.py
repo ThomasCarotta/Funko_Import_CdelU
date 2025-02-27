@@ -825,12 +825,11 @@ def create_payment_preference(request):
         try:
             # Parsear el cuerpo de la solicitud
             data = json.loads(request.body)
-            total = data.get('total')
             items = data.get('items')
             userEmail = data.get('payer', {}).get('email')
 
             # Validar que los datos requeridos estén presentes
-            if not total or not items or not userEmail:
+            if not items or not userEmail:
                 return JsonResponse({"error": "Faltan datos requeridos"}, status=400)
 
             # Inicializar el SDK de Mercado Pago
@@ -886,9 +885,8 @@ def payment_success(request):
 
             # Evitar duplicados verificando antes de realizar la venta
             if Venta.objects.filter(payment_id=payment_id).exists():
-                print(f"⚠️ Pago duplicado detectado: {payment_id}")
+                print(f"Pago duplicado detectado: {payment_id}")
                 return JsonResponse({"error": "Venta ya registrada"}, status=400)
-
 
             # Verificar el pago en Mercado Pago
             headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
