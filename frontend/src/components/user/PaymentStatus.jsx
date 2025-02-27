@@ -34,7 +34,7 @@ const PaymentStatus = () => {
 
       console.log("Carrito:", cart); // Depuración
       console.log("Email del usuario:", userEmail); // Depuración
-      console.log("Total calculado:", total); // Depuración
+      console.log("Total calculado:", total+50); // Depuración
 
       // Hacer una solicitud POST a payment-success para registrar la compra
       console.log("Enviando solicitud POST a payment-success...");

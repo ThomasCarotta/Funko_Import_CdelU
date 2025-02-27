@@ -11,12 +11,24 @@ function AdminHome() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/auth/admin-dashboard-data/")  // URL correcta
-      .then((response) => response.json())
-      .then((json) => setData(json))
+    fetch("http://localhost:8000/api/auth/admin-dashboard-data/")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al obtener datos");
+        }
+        return response.json();
+      })
+      .then((json) => {
+        console.log("Datos recibidos:", json); // Depuración
+        setData({
+          ventas_totales: json.ventas_totales || 0,
+          productos_activos: json.productos_activos || 0,
+          clientes_activos: json.clientes_activos || 0,
+          producto_mas_vendido: json.producto_mas_vendido || "N/A",
+        });
+      })
       .catch((error) => console.error("Error al obtener datos:", error));
   }, []);
-  
 
   return (
     <div className="main-content">
@@ -25,7 +37,7 @@ function AdminHome() {
           <div className="card blue">
             <FaShoppingCart className="card-icon" />
             <h2>Ventas Totales</h2>
-            <p>${data.ventas_totales}</p>
+            <p>${data.ventas_totales.toFixed(2)}</p> {/* Formatear a 2 decimales */}
           </div>
           <div className="card green">
             <FaBox className="card-icon" />
